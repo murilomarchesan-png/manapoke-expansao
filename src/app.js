@@ -461,19 +461,21 @@
     for (const l of F.lojas) { const d = G.haversineKm([lat, lng], [l.lat, l.lng]); if (!b || d < b.d) b = { l, d }; }
     return b;
   }
-  const textoPerto = (x) => { const b = x.lat != null ? lojaPerto(x.lat, x.lng) : null; return !b ? '—' : b.d > 25 ? '<span class="mut">nenhuma até 25 km</span>' : `${esc(b.l.nome)} <span class="mut">${fmt(b.d, 1)} km</span>`; };
+  const textoPerto = (x, m) => { const b = x.lat != null ? lojaPerto(x.lat, x.lng) : null; if (!b) return '—'; if (b.d > 25) return '<span class="mut">nenhuma até 25 km</span>'; const nome = esc(b.l.nome) + (norm(b.l.cidade) !== m.key ? ' (' + esc(b.l.cidade) + ')' : ''); return b.d <= 5 ? `<b class="ok">${nome}</b> <span class="mut">${fmt(b.d, 1)} km · na região</span>` : `${nome} <span class="mut">${fmt(b.d, 1)} km</span>`; };
+  // lojas de cidades vizinhas a até 5 km de um dos principais bairros (ex.: Alphaville fica entre Barueri e Santana de Parnaíba)
+  function lojasVizinhas(m) { const out = new Map(); for (const x of bairrosDaCidade(m)) { if (x.lat == null) continue; const b = lojaPerto(x.lat, x.lng); if (b && b.d <= 5 && norm(b.l.cidade) !== m.key) out.set(b.l.id, b.l); } return [...out.values()]; }
   function corpoCidade(m) {
     const tl = (v, rot) => `<div class="tile"><b>${v}</b><span>${rot}</span></div>`;
     const lj = lojasNaCidade(m);
     const bs = bairrosDaCidade(m);
     const so1 = bs.length === 1 && norm(bs[0].bairro) === m.key;
-    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th><th>Loja mais próxima</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}</td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td><td class="peq">${textoPerto(x)}</td></tr>`).join('')}</tbody></table>
+    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th><th>Loja mais próxima</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}</td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td><td class="peq">${textoPerto(x, m)}</td></tr>`).join('')}</tbody></table>
       <p class="mut peq">Os ${bs.length} bairros com mais moradores, estimados pela grade de 500 m do Censo 2022 (o bairro vem dos endereços mais próximos, CNPJ e CEP). Clique numa linha para ir ao bairro no mapa.</p>`
       : '<p class="mut peq">A base de endereços só distingue um bairro ou localidade nesta cidade; não dá para listar os principais bairros sem inventar.</p>';
     return `<div class="kpi">${tl(reais(m.consumo), 'potencial de consumo por mês')}${tl(fmt(m.pop), 'moradores')}${tl(m.renda ? 'R$ ' + fmt(m.renda) : '—', 'renda média do responsável')}${tl(fmt(m.empregos), 'empregos formais')}${tl(fmt(m.restaurantes), 'restaurantes e lanchonetes')}${tl(fmt(m.academias), 'academias')}</div>
       <p class="mut peq">${m.rkCons || '—'}º em potencial de consumo, ${m.rkPop}º em moradores e ${m.rkRenda || '—'}º em renda entre ${MUN.n} cidades · ${fmt(m.dens)} moradores por km² urbano.</p>
       <h4>Principais bairros</h4>${tab}
-      <p class="peq">${lj.length ? '<b>Lojas Mana Poke na lista:</b> ' + lj.map((l) => esc(l.nome)).join(', ') : '<span class="mut">Nenhuma loja Mana Poke avaliada dentro desta cidade (veja a loja mais próxima de cada bairro na tabela; lojas de cidades vizinhas também atendem a região).</span>'}</p>
+      <p class="peq">${lj.length ? '<b>Lojas Mana Poke na lista:</b> ' + lj.map((l) => esc(l.nome)).join(', ') : (lojasVizinhas(m).length ? '<b>Sem loja dentro da cidade, mas há loja na região (a até 5 km de bairros daqui):</b> ' + lojasVizinhas(m).map((l) => esc(l.nome) + ' (' + esc(l.cidade) + ')').join(', ') : '<span class="mut">Nenhuma loja Mana Poke avaliada nesta cidade nem a até 5 km dos principais bairros.</span>')}</p>
       <button class="btn cidIr" data-cd="${esc(m.cd)}">Ver a cidade no mapa</button>`;
   }
   function renderCidades() {
@@ -482,7 +484,7 @@
     let lista = MUN.rows.filter((m) => (!S.cid.semLoja || !lojasNaCidade(m).length) && (!S.cid.q || m.key.includes(norm(S.cid.q))));
     lista.sort((a, b) => { const x = val(a, S.cid.ord), y = val(b, S.cid.ord); const r = typeof x === 'string' ? x.localeCompare(y, 'pt-BR') : (x == null ? -1 : x) - (y == null ? -1 : y); return S.cid.desc ? -r : r; });
     const card = (m) => { const aberta = S.cid.abertas.has(m.cd); const nl = lojasNaCidade(m).length;
-      return `<details class="cidade" data-cd="${esc(m.cd)}"${aberta ? ' open' : ''}><summary><span class="mais" aria-hidden="true"></span><span class="nm">${esc(m.nome)}${nl ? ` <span class="chip">${nl} loja${nl > 1 ? 's' : ''}</span>` : ''}</span><span class="rs"><b>${reais(m.consumo)}</b> por mês · ${mil(m.pop)} moradores</span><span class="ix" title="Índice geral (0 a 100)">${m.indice == null ? '—' : Math.round(m.indice)}</span></summary><div class="corpo">${aberta ? corpoCidade(m) : ''}</div></details>`; };
+      return `<details class="cidade" data-cd="${esc(m.cd)}"${aberta ? ' open' : ''}><summary><span class="mais" aria-hidden="true"></span><span class="nm">${esc(m.nome)}${!nl && lojasVizinhas(m).length ? ' <span class="chip viz">loja na região</span>' : ''}${nl ? ` <span class="chip">${nl} loja${nl > 1 ? 's' : ''}</span>` : ''}</span><span class="rs"><b>${reais(m.consumo)}</b> por mês · ${mil(m.pop)} moradores</span><span class="ix" title="Índice geral (0 a 100)">${m.indice == null ? '—' : Math.round(m.indice)}</span></summary><div class="corpo">${aberta ? corpoCidade(m) : ''}</div></details>`; };
     el.innerHTML = `<div class="caixa"><h3>Cidades do estado de São Paulo</h3>
       <p class="mut peq">Totais da cidade inteira (Censo 2022, RAIS 2025, CNPJ ativo em 11/10/2026). <b>Potencial de consumo</b> = renda média do responsável × responsáveis com renda declarada, em R$ por mês: mede poder de compra, não é gasto medido nem faturamento. O índice (0 a 100) é a média simples das posições em potencial de consumo, renda, empregos e restaurantes por 10 mil moradores. Abra uma cidade com o <b>+</b>.</p>
       <div class="filtros"><input id="cidBusca" type="search" placeholder="Filtrar cidade" value="${esc(S.cid.q)}" aria-label="Filtrar cidade">
