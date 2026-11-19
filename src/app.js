@@ -291,9 +291,10 @@
       return `<div class="item cand${c.id === S.sel ? ' sel' : ''}" data-id="${esc(c.id)}" role="button" tabindex="0">
         <div class="txt"><b>${esc(c.nome)}</b><span class="mut peq">${esc(bairroLinha(bairroDe(c.lat, c.lng)))}</span></div>
         <div class="notas">${notas}</div>
-        <label class="cen" title="Comparar em cenário de abertura conjunta"><input type="checkbox" class="cenChk" data-id="${esc(c.id)}" ${S.cen.includes(c.id) ? 'checked' : ''}> comparar</label></div>`;
+        <label class="cen" title="Comparar em cenário de abertura conjunta"><input type="checkbox" class="cenChk" data-id="${esc(c.id)}" ${S.cen.includes(c.id) ? 'checked' : ''}> comparar</label>
+        <button class="rm" data-id="${esc(c.id)}" title="Remover este local" aria-label="Remover ${esc(c.nome)}">Remover</button></div>`;
     }).join('');
-    box.innerHTML = linhas;
+    box.innerHTML = linhas + '<div class="linha" style="justify-content:flex-end"><button class="btn perigo" id="btnLimparLista" style="margin-top:6px">Limpar toda a lista</button></div>';
   }
 
   // ---------- detalhe ----------
@@ -607,9 +608,12 @@
     $('#btnMarcar').onclick = () => iniciarModo({ tipo: 'nova' }, 'Clique no mapa onde fica o ponto candidato.');
     $('#btnSalvarNova').onclick = salvarNova; $('#btnCancelarNova').onclick = () => { S.nova = null; gBusca.clearLayers(); atualizarForm(); };
     $('#tabelaCand').addEventListener('click', (e) => {
+      const rm = e.target.closest('.rm');
+      if (rm) { const c = S.cand.find((x) => x.id === rm.dataset.id); if (c && confirm('Remover "' + c.nome + '" da lista?')) { S.cand = S.cand.filter((x) => x !== c); S.cen = S.cen.filter((x) => x !== c.id); if (S.sel === c.id) S.sel = null; salvar(); atualizarTudo(); } return; }
+      if (e.target.closest('#btnLimparLista')) { if (confirm('Remover todos os ' + S.cand.length + ' locais da lista? Isso não apaga as lojas nem os ajustes.')) { S.cand = []; S.cen = []; S.sel = null; gBusca.clearLayers(); salvar(); atualizarTudo(); toast('Lista limpa.'); } return; }
       const chk = e.target.closest('.cenChk');
       if (chk) { const id = chk.dataset.id; if (chk.checked) { if (!S.cen.includes(id)) S.cen.push(id); } else S.cen = S.cen.filter((x) => x !== id); salvar(); if (S.aba === 'cen') renderCenario(); renderSelMapa(); return; }
-      if (e.target.closest('.cen')) return;
+      if (e.target.closest('.cen') || e.target.closest('.rm')) return;
       const tr = e.target.closest('.item.cand'); if (tr) selecionar(tr.dataset.id, true);
     });
     $('#tabelaCand').addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('.item.cand'); if (tr && e.target === tr) { e.preventDefault(); selecionar(tr.dataset.id, true); } });
