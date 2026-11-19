@@ -28,6 +28,7 @@
     <div id="legenda"></div>
   </div>
 
+  <div id="divisor" role="separator" aria-orientation="vertical" tabindex="0" title="Arraste para alargar ou estreitar o painel (ou use as setas do teclado)"></div>
   <aside id="painel">
     <nav id="abas" role="tablist">
       <button role="tab" data-aba="cand" aria-selected="true">Candidatas</button>
@@ -76,7 +77,8 @@
           <label><input type="checkbox" class="fGrupo" value="entorno" checked> Entorno</label>
           <label><input type="checkbox" class="fGrupo" value="outros" checked> Só LinkedIn</label>
           <label><input type="checkbox" id="chkDup" checked> Ocultar duplicatas</label>
-          <label><input type="checkbox" id="chkRotulos"> Nomes no mapa</label>
+          <label><input type="checkbox" id="chkRotulos"> Nomes e bairros das lojas</label>
+          <label><input type="checkbox" id="chkRotCand"> Nomes das candidatas (zoom 14+)</label>
         </div>
         <div id="listaLojas" class="rolagem"></div>
       </div>
@@ -144,6 +146,7 @@
 <script src="data/demanda_grid.js"></script>
 <script src="data/referencias.js"></script>
 <script src="data/ruas/index.js"></script>
+<script src="data/bairros.js"></script>
 <script src="src/geo.js"></script>
 <script src="src/demanda.js"></script>
 <script src="src/app.js"></script>

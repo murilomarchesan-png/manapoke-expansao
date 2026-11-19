@@ -16,7 +16,7 @@
   const COR_R = { 3: '#14724f', 5: '#2a6fb0' };
 
   // ---------- estado e armazenamento ----------
-  const PADRAO = () => ({ raio: 'ambos', shopping: true, dup: true, grupos: { rmsp: true, entorno: true, outros: true }, rotulos: false, circulos: true, uniao: true, demanda: 'off', base: 'osm', pesos: Object.assign({}, DM.PESOS_PADRAO), ordem: 'nota' });
+  const PADRAO = () => ({ raio: 'ambos', shopping: true, dup: true, grupos: { rmsp: true, entorno: true, outros: true }, rotLoja: true, rotCand: true, circulos: true, uniao: true, demanda: 'off', base: 'osm', pesos: Object.assign({}, DM.PESOS_PADRAO), ordem: 'nota' });
   const S = { cfg: PADRAO(), cand: [], ajLojas: {}, ignorar: [], cen: [], sel: null, detR: 3, aba: 'cand', nova: null, modo: null };
   let F = null; // lojas filtradas
   const cache = new Map();
@@ -42,6 +42,46 @@
   const clsNota = (n) => (n == null ? 'x' : n >= 60 ? 'a' : n >= 40 ? 'm' : 'b');
   const badge = (n, parcial) => `<span class="nota ${clsNota(n)}" title="${n == null ? 'sem dados' : parcial ? 'nota parcial (faltam componentes)' : 'nota completa'}">${n == null ? '—' : Math.round(n)}${parcial && n != null ? '*' : ''}</span>`;
   const brasilOk = (lat, lng) => isFinite(lat) && isFinite(lng) && lat > -34 && lat < 6 && lng > -74 && lng < -34;
+
+  // ---------- bairro de um ponto (CNPJ ativo + CEP/CNEFE, offline) ----------
+  const BR = D.bairros ? (() => { const mk = (a) => { const m = new Map(); for (let k = 0; k < a.length; k += 3) m.set(a[k] * 100000 + a[k + 1], a[k + 2]); return m; }; return { B: D.bairros, fino: mk(D.bairros.fcel), grosso: mk(D.bairros.cel) }; })() : null;
+  const bairroMemo = new Map();
+  function celMaisProxima(mapa, lat, lng) {
+    const B = BR.B; const i = Math.floor((lat - B.lat0) / B.dlat), j = Math.floor((lng - B.lng0) / B.dlng);
+    for (let r = 0; r <= 3; r++) {
+      let best = null, bd = 1e9;
+      for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) {
+        if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue;
+        const p = mapa.get((i + a) * 100000 + j + b); if (p == null) continue;
+        const d = Math.hypot((B.lat0 + (i + a + 0.5) * B.dlat - lat) * 111.2, (B.lng0 + (j + b + 0.5) * B.dlng - lng) * 102);
+        if (d < bd) { bd = d; best = p; }
+      }
+      if (best != null) return { p: best, d: bd };
+    }
+    return null;
+  }
+  /** Bairro de um ponto: { bairro, mun, local, dist } ou null se fora da área coberta. */
+  function bairroDe(lat, lng) {
+    if (!BR || lat == null) return null;
+    const k = lat.toFixed(4) + '|' + lng.toFixed(4); if (bairroMemo.has(k)) return bairroMemo.get(k);
+    const f = celMaisProxima(BR.fino, lat, lng), g = celMaisProxima(BR.grosso, lat, lng);
+    let out = null;
+    if (f || g) out = { bairro: f ? BR.B.fpares[f.p][1] : null, mun: f ? BR.B.fpares[f.p][0] : BR.B.pares[g.p][0], dist: f ? f.d : null, local: g ? BR.B.pares[g.p][1] : null };
+    bairroMemo.set(k, out); return out;
+  }
+  const bairroNome = (b) => (b ? b.bairro || b.local || '' : '');
+  const bairroLinha = (b) => (b ? [bairroNome(b), b.mun].filter(Boolean).join(' · ') : 'fora da área com bairros mapeados');
+  const contem = (a, b) => !!b && norm(a).includes(norm(b));
+  /** Nome da loja com o bairro (quando o nome ainda não o traz). */
+  function rotuloLoja(l) {
+    const b2 = l.bairro && !contem(l.nome, l.bairro) ? `<br><span class="sub">${esc(l.bairro)}</span>` : '';
+    return `<b>${esc(l.nome)}</b>${b2}`;
+  }
+  function rotuloCand(c, i) {
+    const b = bairroNome(bairroDe(c.lat, c.lng));
+    const b2 = b && !contem(c.nome, b) ? `<br><span class="sub">${esc(b)}</span>` : '';
+    return `<b>${i + 1}. ${esc(c.nome)}</b>${b2}`;
+  }
 
   // ---------- filtros e análise ----------
   function lojasEf() {
@@ -117,7 +157,7 @@
     F.lojas.forEach((l) => {
       const m = L.circleMarker([l.lat, l.lng], { radius: 7, color: l.shopping ? '#b83a2e' : '#fff', weight: l.shopping ? 3 : 2, dashArray: l.shopping ? '3 2' : null, fillColor: COR_GRUPO[l.grupo] || '#888', fillOpacity: 1 });
       m.bindPopup(() => popupLoja(l), { maxWidth: 300 });
-      if (S.cfg.rotulos) m.bindTooltip(esc(l.nome), { permanent: true, direction: 'right', offset: [8, 0], className: 'rotulo' });
+      if (S.cfg.rotLoja) m.bindTooltip(rotuloLoja(l), { permanent: true, direction: 'right', offset: [8, 0], className: 'rotulo' });
       m.addTo(gLojas);
     });
   }
@@ -135,12 +175,16 @@
     S.cand.forEach((c, i) => {
       const a = radii().map((R) => analisar(c, R).n);
       const m = L.marker([c.lat, c.lng], { icon: iconeCand(i + 1, c.id === S.sel), draggable: true, title: c.nome, zIndexOffset: c.id === S.sel ? 1000 : 0 });
-      m.bindPopup(() => `<div class="popup"><h4>${i + 1}. ${esc(c.nome)}</h4><p>${a.map((n, k) => `${radii()[k]} km: nota ${n.nota == null ? '—' : Math.round(n.nota)}`).join(' · ')}</p><p class="mut">${esc(ROT_P[c.precisao] || '')}</p><p><button class="btn" data-act="ver" data-id="${esc(c.id)}">Ver detalhe</button></p></div>`);
+      m.bindPopup(() => `<div class="popup"><h4>${i + 1}. ${esc(c.nome)}</h4><p class="mut">Bairro: ${esc(bairroLinha(bairroDe(c.lat, c.lng)))}</p><p>${a.map((n, k) => `${radii()[k]} km: nota ${n.nota == null ? '—' : Math.round(n.nota)}`).join(' · ')}</p><p class="mut">${esc(ROT_P[c.precisao] || '')}</p><p><button class="btn" data-act="ver" data-id="${esc(c.id)}">Ver detalhe</button></p></div>`);
       m.on('click', () => { if (S.sel !== c.id) selecionar(c.id, false); });
       m.on('dragend', () => { const p = m.getLatLng(); c.lat = +p.lat.toFixed(6); c.lng = +p.lng.toFixed(6); c.precisao = 'pino_manual'; salvar(); atualizarTudo(); toast('Candidata movida: cálculos refeitos.'); });
+      if (S.cfg.rotCand && (map.getZoom() >= 14 || c.id === S.sel)) m.bindTooltip(rotuloCand(c, i), { permanent: true, direction: 'right', offset: [10, -10], className: 'rotulo cand' });
       m.addTo(gCand);
     });
+    candZoomMostra = map.getZoom() >= 14;
   }
+  let candZoomMostra = false;
+  map.on('zoomend', () => { if (S.cfg.rotCand && (map.getZoom() >= 14) !== candZoomMostra) renderCandMapa(); });
   function renderSelMapa() {
     gSel.clearLayers();
     const c = S.cand.find((x) => x.id === S.sel);
@@ -237,7 +281,7 @@
       const prox = analisar(c, rs[0]).r.mais_proxima;
       const cel = rs.map((R) => { const a = analisar(c, R); return `<td>${badge(a.n.nota, a.n.parcial)}<br><span class="mut peq">nova ${fmt(a.r.pct_nova)}%</span></td>`; }).join('');
       const ap = c.precisao !== 'pino_manual' && c.precisao !== 'coordenada';
-      return `<tr class="cand${c.id === S.sel ? ' sel' : ''}" data-id="${esc(c.id)}"><td>${S.cand.indexOf(c) + 1}. ${esc(c.nome)}${ap ? '<span class="tag lar" title="Ponto aproximado: arraste o pino até o imóvel">aprox.</span>' : ''}</td>
+      return `<tr class="cand${c.id === S.sel ? ' sel' : ''}" data-id="${esc(c.id)}"><td>${S.cand.indexOf(c) + 1}. <b>${esc(c.nome)}</b><br><span class="mut peq">${esc(bairroLinha(bairroDe(c.lat, c.lng)))}</span>${ap ? '<span class="tag lar" title="Ponto aproximado: arraste o pino até o imóvel">aprox.</span>' : ''}</td>
         <td>${prox ? fmt(prox.d, 1) + ' km<br><span class="mut peq">' + esc(prox.nome) + '</span>' : '—'}</td>${cel}
         <td><input type="checkbox" class="cenChk" data-id="${esc(c.id)}" ${S.cen.includes(c.id) ? 'checked' : ''} aria-label="Incluir no cenário"></td></tr>`;
     }).join('');
@@ -256,37 +300,46 @@
     if (a.r.lojas_dentro.length || a.r.lojas_sobrepostas.length) v.push(['', 'As lojas vizinhas estão como "não verificada como aberta". Confirme se estão operando antes de contar essa sobreposição.']);
     return v;
   }
+  const veredito = (n) => (n == null ? 'sem dados' : n >= 60 ? 'potencial alto' : n >= 40 ? 'potencial médio' : 'potencial baixo');
   function blocoRaio(c, R) {
     const a = analisar(c, R); const { r, agg, n } = a;
-    const pesoTotal = n.peso_total;
-    const comps = n.componentes.map((k) => `<div class="comp${k.disponivel ? '' : ' off'}"><div class="cab"><span>${esc(k.rotulo)} <span class="mut peq">(peso ${k.peso})</span></span><b>${k.disponivel ? fmt(k.valor) : 'indisponível'}</b></div>
+    const comps = n.componentes.map((k) => `<div class="comp${k.disponivel ? '' : ' off'}"><div class="cab"><span>${esc(k.rotulo)} <span class="mut">(peso ${k.peso})</span></span><b>${k.disponivel ? fmt(k.valor) + '<small>/100</small>' : 'indisponível'}</b></div>
       <div class="barra"><i style="width:${k.disponivel ? Math.max(1, k.valor) : 0}%"></i></div>
       <div class="mut peq">${k.disponivel ? (k.chave === 'nova_area' ? `${fmt(k.bruto, 1)}% da área do círculo` : k.chave === 'imovel' ? `nota ${fmt(k.bruto, 1)} de 10` : `${fmt(k.bruto, k.chave === 'saudavel' ? 1 : 0)} ${esc(k.unidade)}; melhor que ${fmt(k.valor)}% dos pontos urbanos da área coberta`) : 'sem dado para este ponto'} · fonte: ${esc(k.fonte)}</div></div>`).join('');
-    const dentro = r.lojas_dentro.map((x) => `${esc(x.nome)} (${fmt(x.d, 1)} km)`).join('; ') || 'nenhuma';
-    const fora = r.lojas_sobrepostas.filter((x) => x.d > R).map((x) => `${esc(x.nome)} (${fmt(x.d, 1)} km)`).join('; ') || 'nenhuma';
-    return `<div class="caixa"><h3>Raio de ${R} km ${badge(n.nota, n.parcial)} ${n.parcial ? '<span class="tag lar">nota parcial</span>' : ''}</h3>
-      <div class="kpi"><div><b>${fmt(agg.pop)}</b><span>moradores (Censo 2022)</span></div><div><b>${agg.renda_media_resp == null ? '—' : 'R$ ' + fmt(agg.renda_media_resp)}</b><span>renda média do responsável</span></div><div><b>${fmt(agg.empregos)}</b><span>empregos formais (RAIS)</span></div>
-      <div><b>${fmt(agg.academias)}</b><span>academias ativas (CNPJ)</span></div><div><b>${fmt(agg.restaurantes)}</b><span>restaurantes e lanchonetes (CNPJ)</span></div><div><b>${fmt(agg.densidade_km2)}</b><span>moradores por km²</span></div></div>
-      <p><b>Sobreposição:</b> círculo de ${fmt(r.area_candidato_km2, 1)} km², dos quais <b>${fmt(r.area_coberta_km2, 1)} km² (${fmt(r.pct_coberta)}%)</b> já estão dentro do raio de outras lojas e <b>${fmt(r.area_nova_km2, 1)} km² (${fmt(r.pct_nova)}%)</b> são área nova. Área contada uma vez só, mesmo quando várias lojas se sobrepõem.</p>
-      <p class="peq"><b>Lojas dentro do raio:</b> ${dentro}<br><b>Mais longe, mas com círculo sobreposto:</b> ${fora}</p>
-      <h3 style="margin-top:10px">Como a nota foi calculada</h3>${comps}
-      <p class="mut peq">Nota = média ponderada dos componentes disponíveis (pesos em Ajustes). Mede potencial de demanda e cobertura; não é previsão de faturamento. Fatos do público saudável usam academias como indicador indireto.</p>
-      ${avisos(c, R, a).map(([k, t]) => `<div class="alerta ${k}">${t}</div>`).join('')}</div>`;
+    const dentro = r.lojas_dentro.map((x) => `<li>${esc(x.nome)} <span class="mut">${fmt(x.d, 1)} km</span></li>`).join('') || '<li class="mut">nenhuma</li>';
+    const fora = r.lojas_sobrepostas.filter((x) => x.d > R).map((x) => `<li>${esc(x.nome)} <span class="mut">${fmt(x.d, 1)} km</span></li>`).join('') || '<li class="mut">nenhuma</li>';
+    const tile = (v, rot) => `<div class="tile"><b>${v}</b><span>${rot}</span></div>`;
+    return `<div class="caixa"><h3>Números em volta do ponto · raio de ${R} km</h3>
+      <div class="kpi">${tile(fmt(agg.pop), 'moradores (Censo 2022)')}${tile(agg.renda_media_resp == null ? '—' : 'R$ ' + fmt(agg.renda_media_resp), 'renda média do responsável')}${tile(fmt(agg.empregos), 'empregos formais (RAIS)')}${tile(fmt(agg.densidade_km2), 'moradores por km²')}${tile(fmt(agg.restaurantes), 'restaurantes e lanchonetes (CNPJ)')}${tile(fmt(agg.academias), 'academias ativas (CNPJ)')}</div></div>
+      <div class="caixa"><h3>Sobreposição com as lojas atuais · ${R} km</h3>
+      <div class="barra2" role="img" aria-label="${fmt(r.pct_nova)}% área nova, ${fmt(r.pct_coberta)}% já coberta"><i class="nova" style="width:${Math.max(0, Math.min(100, r.pct_nova))}%"></i><i class="cob" style="width:${Math.max(0, Math.min(100, r.pct_coberta))}%"></i></div>
+      <div class="dupla"><div><b class="grande verde">${fmt(r.pct_nova)}%</b><br><span class="mut">área nova (${fmt(r.area_nova_km2, 1)} km²)</span></div><div><b class="grande">${fmt(r.pct_coberta)}%</b><br><span class="mut">já coberta (${fmt(r.area_coberta_km2, 1)} km²)</span></div></div>
+      <p class="mut peq">Círculo de ${fmt(r.area_candidato_km2, 1)} km². A área é contada uma vez só, mesmo quando várias lojas se sobrepõem.</p>
+      <div class="duas"><div><b>Lojas dentro do raio</b><ul class="lst">${dentro}</ul></div><div><b>Mais longe, com círculo sobreposto</b><ul class="lst">${fora}</ul></div></div></div>
+      <div class="caixa"><h3>Como a nota de ${R} km foi calculada ${badge(n.nota, n.parcial)}</h3>${comps}
+      <p class="mut peq">Nota = média ponderada dos componentes disponíveis (pesos em Ajustes). Mede potencial de demanda e cobertura; não é previsão de faturamento. O público saudável usa academias como indicador indireto.</p></div>
+      ${avisos(c, R, a).map(([k, t]) => `<div class="alerta ${k}">${t}</div>`).join('')}`;
   }
   function renderDetalhe() {
     const c = S.cand.find((x) => x.id === S.sel); const el = $('#detalhe');
     if (!c) { el.innerHTML = '<div class="caixa"><p class="mut">Selecione uma candidata no ranking ou no mapa.</p></div>'; return; }
     const rs = radii();
     if (!rs.includes(S.detR)) S.detR = rs[0];
-    const toggle = rs.length > 1 ? `<div class="linha"><span class="mut peq">Desenhar no mapa:</span> ${rs.map((R) => `<button class="btn ${R === S.detR ? '' : 'sec'}" data-detr="${R}">${R} km</button>`).join('')}</div>` : '';
+    const bd = bairroDe(c.lat, c.lng);
+    const resumo = rs.map((R) => { const a = analisar(c, R); return `<button class="resumo${R === S.detR ? ' ativo' : ''}" data-detr="${R}" aria-pressed="${R === S.detR}"><span class="mut">Raio de ${R} km</span><span class="nota grande ${clsNota(a.n.nota)}">${a.n.nota == null ? '—' : Math.round(a.n.nota)}${a.n.parcial && a.n.nota != null ? '*' : ''}</span><span>${veredito(a.n.nota)}${a.n.parcial ? ' · parcial' : ''}</span><span class="mut peq">${fmt(a.r.pct_nova)}% área nova · ${fmt(a.agg.pop)} moradores</span></button>`; }).join('');
     el.innerHTML = `<div class="caixa"><div class="linha"><button class="btn sec" id="btnVoltar">← Ranking</button><button class="btn sec" id="btnCentrar">Centralizar no mapa</button></div>
-      <h3>${S.cand.indexOf(c) + 1}. ${esc(c.nome)}</h3>
-      <p class="mut peq">${esc(c.referencia || '')} · ${fmt(c.lat, 5)}, ${fmt(c.lng, 5)} · ${esc(ROT_P[c.precisao] || '')}</p>
+      <h2 class="titulo">${S.cand.indexOf(c) + 1}. ${esc(c.nome)}</h2>
+      <p class="bairro-linha"><b>Bairro:</b> ${esc(bairroLinha(bd))}${bd && bd.local && bd.local !== bd.bairro ? `<br><span class="mut">Distrito/localidade pelos CEPs: ${esc(bd.local)}</span>` : ''}</p>
+      <p class="mut peq">${esc(c.referencia || '')} · ${fmt(c.lat, 5)}, ${fmt(c.lng, 5)} · ${esc(ROT_P[c.precisao] || '')}</p></div>
+      <div class="resumos${rs.length > 1 ? ' dois' : ''}">${resumo}</div>
+      ${rs.length > 1 ? '<p class="mut peq" style="margin:-4px 2px 8px">Toque num raio para ver os números dele e desenhá-lo no mapa.</p>' : ''}
+      ${blocoRaio(c, S.detR)}
+      <details class="caixa" open><summary><b>Nome, imóvel, aluguel e observações</b></summary>
       <label>Nome <input id="dNome" maxlength="80" value="${esc(c.nome)}"></label>
-      <label>Viabilidade do imóvel (0 a 10; deixe vazio se ainda não avaliou) <input id="dImovel" type="number" min="0" max="10" step="0.5" value="${c.imovel == null ? '' : esc(c.imovel)}"></label>
+      <label>Viabilidade do imóvel (0 a 10; vazio = ainda não avaliou) <input id="dImovel" type="number" min="0" max="10" step="0.5" value="${c.imovel == null ? '' : esc(c.imovel)}"></label>
       <label>Aluguel / condições (anotação sua) <input id="dAluguel" maxlength="120" value="${esc(c.aluguel || '')}"></label>
       <label>Observações <input id="dObs" maxlength="200" value="${esc(c.obs || '')}"></label>
-      <div class="linha"><button class="btn perigo" id="btnRemover">Remover candidata</button></div></div>${toggle}${rs.map((R) => blocoRaio(c, R)).join('')}`;
+      <div class="linha"><button class="btn perigo" id="btnRemover">Remover candidata</button></div></details>`;
     $('#btnVoltar').onclick = () => setAba('cand');
     $('#btnCentrar').onclick = () => map.setView([c.lat, c.lng], 14);
     $('#dNome').onchange = (e) => { c.nome = e.target.value.trim().slice(0, 80) || c.nome; salvar(); atualizarTudo(); };
@@ -349,6 +402,7 @@
     <h3>Lojas</h3>
     <p>Base de ${D.lojas.n} registros do levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificados no CNEFE do IBGE. <b>Nenhuma loja está confirmada como aberta.</b> Duplicatas prováveis: Campinas Cambuí (Galizia) e Vinhedo (incompleto). Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
     <h3>O que a nota não é</h3>
+    <p><b>Bairro de um ponto:</b> o app descobre o bairro pelos endereços mais próximos: o bairro escrito pelas empresas ativas no CNPJ (Receita Federal, base de 11/10/2026) e, ao lado, o distrito/localidade dos CEPs (IBGE, CNEFE/Censo 2022). É uma referência aproximada, em quadras de uns 280 m. Nomes populares de empreendimento ou de região podem não ser bairro oficial.</p>
     <p>É um índice de 0 a 100 do potencial de demanda e da cobertura, com pesos ajustáveis. Não prevê faturamento. Aluguel por bairro e fluxo de pessoas não entram porque não há fonte gratuita confiável para o Brasil; a viabilidade do imóvel é uma nota que você informa.</p>
     <h3>Privacidade</h3><p>Tudo roda no seu navegador. Suas candidatas ficam salvas só neste navegador (ou no arquivo que você exportar). Os mapas de fundo são baixados do OpenStreetMap, CARTO ou Esri.</p>`;
 
@@ -371,6 +425,22 @@
     if (t.length > 1 && TIPOS.has(t[0])) t.shift();
     return { tokens: t, num };
   }
+  /** Busca bairros em TODOS os municípios da base (CNPJ ativo e CEP), com o do município escolhido primeiro. */
+  function achaBairros(it, munSel) {
+    if (!BR || !it.tokens || !it.tokens.length) return [];
+    const B = BR.B; const alvo = it.tokens.join(' ');
+    const casa = (nome, tk) => tk.every((w, i) => (i === tk.length - 1 ? nome.split(' ').some((p) => p.startsWith(w)) : (' ' + nome + ' ').includes(' ' + w + ' ')));
+    const vistos = new Map();
+    const add = (mun, nome, lat, lng, n) => { const k = mun + '|' + norm(nome); const v = vistos.get(k); if (!v || n > v.n) vistos.set(k, { mun, nome, lat, lng, n }); };
+    let tk = it.tokens; let parecido = false;
+    const varre = () => { B.fidx.forEach((x) => { if (casa(norm(x[1]), tk)) add(x[0], x[1], x[2], x[3], x[4]); }); B.idx.forEach((x) => { if (casa(norm(x[1]), tk)) add(x[0], x[1], x[2], x[3], x[4] / 1000); }); };
+    varre();
+    if (!vistos.size && it.tokens.length > 1) { tk = [it.tokens.slice().sort((a, b) => b.length - a.length)[0]]; parecido = tk[0].length >= 5; if (parecido) varre(); }
+    const lista = Array.from(vistos.values());
+    const rank = (v) => (norm(v.nome) === alvo ? 0 : norm(v.nome).startsWith(alvo) ? 1 : 2) * 10 + (v.mun === munSel ? 0 : 5);
+    lista.sort((a, b) => rank(a) - rank(b) || b.n - a.n);
+    return lista.slice(0, 6).map((v) => ({ lat: v.lat, lng: v.lng, nome: 'Bairro ' + v.nome, ref: v.nome + ', ' + v.mun, linha: 'Bairro ' + v.nome + ' · ' + v.mun, sub: (parecido ? 'nome parecido, não é igual ao que você digitou · ' : '') + (v.mun !== munSel ? 'em outro município · ' : '') + 'centro aproximado (média dos endereços do bairro)', precisao: 'bairro_aproximado' }));
+  }
   async function buscar() {
     const q = $('#busca').value.trim(); const ul = $('#resBusca'); ul.innerHTML = '';
     if (!q) return;
@@ -386,30 +456,36 @@
     const score = (i) => { const t = d.trechos[i]; if (it.num == null) return 0; if (it.num >= t[3] && it.num <= t[4]) return 0; return Math.min(Math.abs(it.num - t[3]), Math.abs(it.num - t[4])) + 1; };
     ruas.sort((a, b) => tipoCasa(a) - tipoCasa(b) || score(a) - score(b));
     const out = ruas.slice(0, 8).map((i) => { const t = d.trechos[i]; const dentro = it.num != null && it.num >= t[3] && it.num <= t[4]; return { lat: t[5], lng: t[6], nome: t[0] + (it.num != null ? ', ' + it.num : ''), ref: `${t[0]}${t[1] ? ', ' + t[1] : ''}, ${d.mun}`, linha: `${t[0]}${t[1] ? ' · ' + t[1] : ''}`, sub: `CEP ${t[2]} · nºs ${t[3]}–${t[4]}${it.num != null ? (dentro ? ' · trecho contém o nº ' + it.num : ' · nº fora da faixa conhecida') : ''}`, precisao: 'trecho_aproximado' }; });
-    const bairros = {}; d.trechos.forEach((t, i) => { if (t[1] && casa(d.n[i].b, it.tokens)) { const b = bairros[t[1]] || (bairros[t[1]] = { s: 0, la: 0, ln: 0 }); b.s++; b.la += t[5]; b.ln += t[6]; } });
-    Object.keys(bairros).slice(0, 3).forEach((k) => { const b = bairros[k]; out.push({ lat: b.la / b.s, lng: b.ln / b.s, nome: k, ref: `${k}, ${d.mun}`, linha: `Bairro ${k}`, sub: 'centro aproximado do bairro (média dos trechos de rua)', precisao: 'bairro_aproximado' }); });
-    if (!out.length) { ul.innerHTML = '<li class="mut peq" style="padding:6px">Nada encontrado neste município. Confira o município selecionado, tente só o nome da rua ou cole coordenadas.</li>'; return; }
+    achaBairros(it, d.mun).forEach((o) => out.push(o));
+    if (!out.length) { ul.innerHTML = '<li class="mut peq" style="padding:6px">Não achei esse nome na base oficial (ruas e bairros do CEP e do CNPJ). Nomes populares de empreendimento ou de região (por exemplo, “Jardim das Perdizes” em São Paulo) muitas vezes não são bairro oficial. Tente a rua, ou use <b>Marcar no mapa</b>: o app diz em qual bairro oficial o pino caiu.</li>'; return; }
     out.forEach((o, k) => { const li = document.createElement('li'); li.innerHTML = `<button data-k="${k}">${esc(o.linha || o.nome)}<small>${esc(o.sub || '')}</small></button>`; li.firstChild.onclick = () => escolher(o); ul.appendChild(li); });
   }
   function escolher(o) {
     $('#resBusca').innerHTML = '';
     S.nova = { lat: +o.lat.toFixed(6), lng: +o.lng.toFixed(6), precisao: o.precisao, ref: o.ref };
-    $('#novaNome').value = (o.nome || '').slice(0, 80);
-    colocarPinoBusca(); map.setView([S.nova.lat, S.nova.lng], 16); atualizarForm();
+    $('#novaNome').value = (o.nome || '').slice(0, 80); S.novaAuto = $('#novaNome').value;
+    colocarPinoBusca(); map.setView([S.nova.lat, S.nova.lng], o.precisao === 'bairro_aproximado' ? 15 : 16); atualizarForm();
   }
   function colocarPinoBusca() {
     gBusca.clearLayers(); if (!S.nova) return;
     const m = L.marker([S.nova.lat, S.nova.lng], { icon: L.divIcon({ className: '', html: '<div class="pin-busca"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), draggable: true, title: 'Arraste até o imóvel' }).addTo(gBusca);
-    m.on('dragend', () => { const p = m.getLatLng(); S.nova.lat = +p.lat.toFixed(6); S.nova.lng = +p.lng.toFixed(6); S.nova.precisao = 'pino_manual'; atualizarForm(); });
+    m.on('dragend', () => { const p = m.getLatLng(); S.nova.lat = +p.lat.toFixed(6); S.nova.lng = +p.lng.toFixed(6); S.nova.precisao = 'pino_manual'; nomeAuto(); atualizarForm(); });
+  }
+  /** Mantém o nome sugerido (bairro do pino) enquanto o usuário não o trocou. */
+  function nomeAuto() {
+    const b = bairroNome(bairroDe(S.nova.lat, S.nova.lng)); const campo = $('#novaNome');
+    if (b && (!campo.value || campo.value === S.novaAuto || campo.value === 'Ponto marcado')) { campo.value = b; S.novaAuto = b; }
   }
   function atualizarForm() {
     const f = $('#formNova'); f.hidden = !S.nova; if (!S.nova) return;
-    $('#novaPos').textContent = `${fmt(S.nova.lat, 5)}, ${fmt(S.nova.lng, 5)} · ${ROT_P[S.nova.precisao] || ''}. Arraste o pino preto até o imóvel para mais precisão.`;
+    const b = bairroDe(S.nova.lat, S.nova.lng);
+    $('#novaPos').innerHTML = `<div class="bairro-pin"><b>Bairro:</b> ${esc(bairroLinha(b))}${b && b.local && b.local !== b.bairro ? `<br><span class="mut">Distrito/localidade pelos CEPs: ${esc(b.local)}</span>` : ''}${b && b.dist != null && b.dist > 0.6 ? '<br><span class="mut">Bairro do endereço mais próximo (a ' + fmt(b.dist, 1) + ' km).</span>' : ''}</div><div class="mut peq">${fmt(S.nova.lat, 5)}, ${fmt(S.nova.lng, 5)} · ${esc(ROT_P[S.nova.precisao] || '')}. Arraste o pino preto até o imóvel para mais precisão.</div>`;
   }
   function salvarNova() {
     if (!S.nova) return;
     const nome = $('#novaNome').value.trim().slice(0, 80) || 'Nova candidata';
-    const c = { id: 'u-' + Date.now().toString(36), nome, referencia: S.nova.ref || '', lat: S.nova.lat, lng: S.nova.lng, precisao: S.nova.precisao, origem: 'usuario', imovel: null, aluguel: '', obs: '' };
+    const bb = bairroDe(S.nova.lat, S.nova.lng); const refer = S.nova.ref && S.nova.ref !== 'ponto marcado no mapa' ? S.nova.ref : (bb ? bairroLinha(bb) + ' (ponto marcado no mapa)' : 'ponto marcado no mapa');
+    const c = { id: 'u-' + Date.now().toString(36), nome, referencia: refer, lat: S.nova.lat, lng: S.nova.lng, precisao: S.nova.precisao, origem: 'usuario', imovel: null, aluguel: '', obs: '' };
     S.cand.push(c); S.nova = null; gBusca.clearLayers(); atualizarForm(); $('#novaNome').value = ''; $('#busca').value = '';
     salvar(); atualizarTudo(); selecionar(c.id, true); toast('Candidata salva.');
   }
@@ -420,7 +496,7 @@
   map.on('click', (e) => {
     if (!S.modo) return;
     const lat = +e.latlng.lat.toFixed(6), lng = +e.latlng.lng.toFixed(6);
-    if (S.modo.tipo === 'nova') { S.nova = { lat, lng, precisao: 'pino_manual', ref: 'ponto marcado no mapa' }; if (!$('#novaNome').value) $('#novaNome').value = 'Ponto marcado'; colocarPinoBusca(); atualizarForm(); }
+    if (S.modo.tipo === 'nova') { S.nova = { lat, lng, precisao: 'pino_manual', ref: 'ponto marcado no mapa' }; if (!$('#novaNome').value) $('#novaNome').value = 'Ponto marcado'; nomeAuto(); colocarPinoBusca(); atualizarForm(); }
     if (S.modo.tipo === 'loja') { S.ajLojas[S.modo.id] = { lat, lng }; salvar(); atualizarTudo(); toast('Ponto da loja salvo (marcado por você).'); }
     fimModo();
   });
@@ -490,14 +566,26 @@
   // ---------- coordenação ----------
   function atualizarTudo() { filtrar(); renderTopo(); renderLojasMapa(); renderTabela(); renderCandMapa(); renderSelMapa(); if (S.aba === 'det') renderDetalhe(); if (S.aba === 'cen') renderCenario(); if (S.aba === 'lojas') renderListaLojas(); }
   function aplicarCfgNaTela() {
-    $$('input[name=raio]').forEach((i) => (i.checked = i.value === S.cfg.raio)); $('#chkShopping').checked = S.cfg.shopping; $('#chkDup').checked = S.cfg.dup; $('#chkRotulos').checked = S.cfg.rotulos;
+    $$('input[name=raio]').forEach((i) => (i.checked = i.value === S.cfg.raio)); $('#chkShopping').checked = S.cfg.shopping; $('#chkDup').checked = S.cfg.dup; $('#chkRotulos').checked = S.cfg.rotLoja; $('#chkRotCand').checked = S.cfg.rotCand;
     $$('.fGrupo').forEach((i) => (i.checked = !!S.cfg.grupos[i.value])); $('#chkCirculos').checked = S.cfg.circulos; $('#chkUniao').checked = S.cfg.uniao; $('#selDemanda').value = S.cfg.demanda; $('#selOrdem').value = S.cfg.ordem; renderPesos();
+  }
+  function ligarDivisor() {
+    const root = document.documentElement; const dv = $('#divisor'); const KEY = 'mp_painel_w';
+    const limita = (w) => Math.max(380, Math.min(Math.round(window.innerWidth * 0.7), w));
+    const atual = () => parseInt(getComputedStyle(root).getPropertyValue('--pw'), 10) || 520;
+    try { const w = parseInt(localStorage.getItem(KEY), 10); if (w) root.style.setProperty('--pw', limita(w) + 'px'); } catch (e) { /* sem armazenamento */ }
+    let arrasta = false;
+    dv.addEventListener('pointerdown', (e) => { arrasta = true; dv.setPointerCapture(e.pointerId); e.preventDefault(); });
+    dv.addEventListener('pointermove', (e) => { if (arrasta) root.style.setProperty('--pw', limita(window.innerWidth - e.clientX) + 'px'); });
+    dv.addEventListener('pointerup', () => { arrasta = false; try { localStorage.setItem(KEY, String(atual())); } catch (e) { /* ignore */ } });
+    dv.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); root.style.setProperty('--pw', limita(atual() + (e.key === 'ArrowLeft' ? 40 : -40)) + 'px'); } });
   }
   function ligar() {
     $$('input[name=raio]').forEach((i) => i.addEventListener('change', () => { S.cfg.raio = i.value; salvar(); atualizarTudo(); }));
     $('#chkShopping').onchange = (e) => { S.cfg.shopping = e.target.checked; salvar(); atualizarTudo(); };
     $('#chkDup').onchange = (e) => { S.cfg.dup = e.target.checked; salvar(); atualizarTudo(); };
-    $('#chkRotulos').onchange = (e) => { S.cfg.rotulos = e.target.checked; salvar(); renderLojasMapa(); };
+    $('#chkRotulos').onchange = (e) => { S.cfg.rotLoja = e.target.checked; salvar(); renderLojasMapa(); };
+    $('#chkRotCand').onchange = (e) => { S.cfg.rotCand = e.target.checked; salvar(); renderCandMapa(); };
     $$('.fGrupo').forEach((i) => (i.onchange = () => { S.cfg.grupos[i.value] = i.checked; salvar(); atualizarTudo(); }));
     $('#chkCirculos').onchange = (e) => { S.cfg.circulos = e.target.checked; salvar(); renderLojasMapa(); };
     $('#chkUniao').onchange = (e) => { S.cfg.uniao = e.target.checked; salvar(); renderLojasMapa(); };
@@ -506,6 +594,7 @@
     $('#selOrdem').innerHTML = Object.keys(ORDENS).map((k) => `<option value="${k}">${esc(ORDENS[k])}</option>`).join('');
     $('#selOrdem').onchange = (e) => { S.cfg.ordem = e.target.value; salvar(); renderTabela(); };
     $$('#abas button').forEach((b) => (b.onclick = () => setAba(b.dataset.aba)));
+    ligarDivisor();
     $('#btnBuscar').onclick = buscar; $('#busca').onkeydown = (e) => { if (e.key === 'Enter') buscar(); };
     $('#btnMarcar').onclick = () => iniciarModo({ tipo: 'nova' }, 'Clique no mapa onde fica o ponto candidato.');
     $('#btnSalvarNova').onclick = salvarNova; $('#btnCancelarNova').onclick = () => { S.nova = null; gBusca.clearLayers(); atualizarForm(); };

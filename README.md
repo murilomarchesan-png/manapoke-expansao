@@ -17,6 +17,7 @@ Página estática, sem servidor e sem cadastro. Todos os dados são públicos (I
 | Raio de **3 km**, **5 km** ou **os dois** | Botões no topo. Os dois raios aparecem lado a lado no ranking. |
 | **Incluir lojas de shopping** | Caixa no topo. Desmarcada, as lojas de shopping somem do mapa e de todos os cálculos. "Não classificado" não é tratado como loja de rua. |
 | Lojas **sem ponto no mapa** | O topo mostra "cobertura parcial" com os nomes. A sobreposição só usa as lojas localizadas. Na aba **Lojas** dá para marcar o ponto no mapa. |
+| **Bairro do ponto** | Ao marcar ou arrastar um pino, o app mostra o bairro (CNPJ) e o distrito/localidade (CEP). A busca acha ruas e também bairros de qualquer município da base. As lojas e as candidatas mostram o nome com o bairro no mapa. |
 | **Candidatas** | 39 áreas do mapa anterior (sem repetições), mais as que você adicionar buscando uma rua, um bairro, coordenadas ou clicando no mapa. Arraste o pino até o imóvel. |
 | **Nota** | Aba **Detalhe**: cada componente com valor, fonte e percentil. Pesos ajustáveis na aba **Ajustes**. |
 | **Cenário** | Marque 2 ou 3 candidatas na coluna "Cen.": área nova do conjunto e canibalização entre elas. |
@@ -41,6 +42,7 @@ Suas candidatas e ajustes ficam salvos só no navegador. Use **Exportar tudo (JS
 | Empregos formais | RAIS 2025 (Ministério do Trabalho), vínculos por CEP |
 | Restaurantes, lanchonetes e academias ativos | Receita Federal, CNPJ (base de 11/10/2026) |
 | Endereços e coordenadas das lojas, ruas | IBGE, CNEFE (Censo 2022) e CEP |
+| Bairro de cada ponto e busca por bairro | Receita Federal, CNPJ (bairro das empresas ativas, base de 11/10/2026), e distrito/localidade dos CEPs (IBGE, CNEFE) |
 | Fundo do mapa | OpenStreetMap, CARTO ou Esri |
 
 A grade de demanda tem células de 500 m e cobre a **Grande São Paulo, a Baixada Santista, Jundiaí e o eixo Campinas–Valinhos–Vinhedo**. Fora dessa área o app avisa e não calcula nota de demanda.
@@ -57,7 +59,7 @@ A grade de demanda tem células de 500 m e cobre a **Grande São Paulo, a Baixad
 2. **3 lojas não têm ponto no mapa** (Atibaia, Bauru, Bragança Paulista): faltam rua ou número. Enquanto isso o app mostra "cobertura parcial". A de Vinhedo "incompleta" está oculta como duplicata de Vinhedo.
 3. **Pontos aproximados:** as 39 candidatas iniciais são pontos de **área**, não imóveis. O endereço buscado é o ponto médio do **trecho** da rua. Arraste o pino até o imóvel antes de decidir.
 4. **Possíveis duplicatas e divergências** da base (Campinas Cambuí, Santana 435/436 e outras) estão em [`data/RELATORIO_QUALIDADE.md`](data/RELATORIO_QUALIDADE.md).
-5. **Nomes de rua sem acento** na busca (vêm assim da base oficial). A busca ignora acentos, então "Bragança" e "braganca" funcionam igual.
+5. **Bairro é aproximado:** vem dos endereços mais próximos (quadras de uns 280 m) e segue o nome escrito pelas empresas no CNPJ; nomes populares (por exemplo, de empreendimentos) podem não existir. **Nomes de rua sem acento** na busca (vêm assim da base oficial). A busca ignora acentos, então "Bragança" e "braganca" funcionam igual.
 6. A nota mede **potencial de demanda e cobertura**, não prevê faturamento.
 
 ## Estrutura
@@ -68,7 +70,7 @@ src/geo.js         distância, círculos, união e diferença de áreas, cenári
 src/demanda.js     agregação da grade e nota explicável
 src/app.js         interface
 vendor/            Leaflet 1.9.4 e polygon-clipping 0.15.7 (sem CDN)
-data/              lojas, candidatas, grade de demanda, referências, ruas por município
+data/              lojas, candidatas, grade de demanda, referências, ruas por município, bairros
 tests/             testes automáticos
 ```
 
