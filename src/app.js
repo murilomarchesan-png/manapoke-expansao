@@ -298,7 +298,7 @@
   map.on('moveend', debounce(() => { if (S.cfg.demanda !== 'off') renderDemanda(); }, 150));
 
   // rótulos do mapa dependem do zoom: longe = só pontos; médio = nomes; perto = nomes com bairro
-  function zoomRotulos() { const z = map.getZoom(); const c = map.getContainer(); c.classList.toggle('z-longe', z < 11); c.classList.toggle('z-medio', z >= 11 && z < 13); }
+  function zoomRotulos() { const z = map.getZoom(); const c = map.getContainer(); const lim = window.innerWidth <= 860 ? 12 : 11; c.classList.toggle('z-longe', z < lim); c.classList.toggle('z-medio', z >= lim && z < 13 + (lim - 11)); }
   map.on('zoomend', zoomRotulos); zoomRotulos();
 
   // ---------- cabeçalho ----------
@@ -469,7 +469,7 @@
     const lj = lojasNaCidade(m);
     const bs = bairrosDaCidade(m);
     const so1 = bs.length === 1 && norm(bs[0].bairro) === m.key;
-    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th><th>Loja mais próxima</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}</td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td><td class="peq">${textoPerto(x, m)}</td></tr>`).join('')}</tbody></table>
+    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}<div class="peq perto">Loja mais próxima: ${textoPerto(x, m)}</div></td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td></tr>`).join('')}</tbody></table>
       <p class="mut peq">Os ${bs.length} bairros com mais moradores, estimados pela grade de 500 m do Censo 2022 (o bairro vem dos endereços mais próximos, CNPJ e CEP). Clique numa linha para ir ao bairro no mapa.</p>`
       : '<p class="mut peq">A base de endereços só distingue um bairro ou localidade nesta cidade; não dá para listar os principais bairros sem inventar.</p>';
     return `<div class="kpi">${tl(reais(m.consumo), 'potencial de consumo por mês')}${tl(fmt(m.pop), 'moradores')}${tl(m.renda ? 'R$ ' + fmt(m.renda) : '—', 'renda média do responsável')}${tl(fmt(m.empregos), 'empregos formais')}${tl(fmt(m.restaurantes), 'restaurantes e lanchonetes')}${tl(fmt(m.academias), 'academias')}</div>
