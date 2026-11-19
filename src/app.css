@@ -162,3 +162,5 @@ table.cmp.bairros td:first-child{white-space:normal}
 tr.bi{cursor:pointer}tr.bi:hover,tr.bi:focus-visible{background:var(--verde2)}
 
 .chip.viz{background:#eef3f8;color:#3b5b7a}b.ok{color:var(--verde,#2f6b4a)}
+
+#topo .marca{display:flex;align-items:center;gap:10px}#topo .marca img{display:block;height:40px;width:auto}#topo .marca span{font-weight:600;color:var(--mut,#5b6b60);letter-spacing:.02em;border-left:2px solid var(--linha);padding-left:10px}
