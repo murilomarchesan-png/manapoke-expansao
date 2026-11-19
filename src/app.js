@@ -455,18 +455,25 @@
   S.cid = { ord: 'consumo', desc: true, semLoja: false, q: '', abertas: new Set() };
   const CID_ORD = [['consumo', 'Potencial de consumo'], ['pop', 'Moradores'], ['renda', 'Renda média do responsável'], ['empregos', 'Empregos formais'], ['rest10k', 'Restaurantes por 10 mil moradores'], ['indice', 'Índice geral'], ['nome', 'Nome (A a Z)']];
   const bairrosDaCidade = (m) => { const t = D.cidades_bairros; if (!t) return []; const cols = t.colunas; return (t.cidades[m.cd] || []).map((r) => { const o = {}; cols.forEach((c, i) => (o[c] = r[i])); return o; }); };
+  // loja Mana Poke mais próxima de um ponto (só entre as avaliadas), em linha reta
+  function lojaPerto(lat, lng) {
+    let b = null;
+    for (const l of F.lojas) { const d = G.haversineKm([lat, lng], [l.lat, l.lng]); if (!b || d < b.d) b = { l, d }; }
+    return b;
+  }
+  const textoPerto = (x) => { const b = x.lat != null ? lojaPerto(x.lat, x.lng) : null; return !b ? '—' : b.d > 25 ? '<span class="mut">nenhuma até 25 km</span>' : `${esc(b.l.nome)} <span class="mut">${fmt(b.d, 1)} km</span>`; };
   function corpoCidade(m) {
     const tl = (v, rot) => `<div class="tile"><b>${v}</b><span>${rot}</span></div>`;
     const lj = lojasNaCidade(m);
     const bs = bairrosDaCidade(m);
     const so1 = bs.length === 1 && norm(bs[0].bairro) === m.key;
-    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}</td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td></tr>`).join('')}</tbody></table>
+    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th><th>Loja mais próxima</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}</td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td><td class="peq">${textoPerto(x)}</td></tr>`).join('')}</tbody></table>
       <p class="mut peq">Os ${bs.length} bairros com mais moradores, estimados pela grade de 500 m do Censo 2022 (o bairro vem dos endereços mais próximos, CNPJ e CEP). Clique numa linha para ir ao bairro no mapa.</p>`
       : '<p class="mut peq">A base de endereços só distingue um bairro ou localidade nesta cidade; não dá para listar os principais bairros sem inventar.</p>';
     return `<div class="kpi">${tl(reais(m.consumo), 'potencial de consumo por mês')}${tl(fmt(m.pop), 'moradores')}${tl(m.renda ? 'R$ ' + fmt(m.renda) : '—', 'renda média do responsável')}${tl(fmt(m.empregos), 'empregos formais')}${tl(fmt(m.restaurantes), 'restaurantes e lanchonetes')}${tl(fmt(m.academias), 'academias')}</div>
       <p class="mut peq">${m.rkCons || '—'}º em potencial de consumo, ${m.rkPop}º em moradores e ${m.rkRenda || '—'}º em renda entre ${MUN.n} cidades · ${fmt(m.dens)} moradores por km² urbano.</p>
       <h4>Principais bairros</h4>${tab}
-      <p class="peq">${lj.length ? '<b>Lojas Mana Poke na lista:</b> ' + lj.map((l) => esc(l.nome)).join(', ') : '<span class="mut">Nenhuma loja Mana Poke avaliada nesta cidade.</span>'}</p>
+      <p class="peq">${lj.length ? '<b>Lojas Mana Poke na lista:</b> ' + lj.map((l) => esc(l.nome)).join(', ') : '<span class="mut">Nenhuma loja Mana Poke avaliada dentro desta cidade (veja a loja mais próxima de cada bairro na tabela; lojas de cidades vizinhas também atendem a região).</span>'}</p>
       <button class="btn cidIr" data-cd="${esc(m.cd)}">Ver a cidade no mapa</button>`;
   }
   function renderCidades() {
