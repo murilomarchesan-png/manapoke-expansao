@@ -83,6 +83,8 @@ b.grande{font-size:26px;line-height:1.1}.verde{color:var(--verde)}
 .lst{margin:4px 0 0;padding-left:18px}.lst li{margin:2px 0}
 .comp small{font-weight:400;color:var(--mut)}
 .caixa summary{cursor:pointer;padding:2px 0}
+.z-longe .leaflet-tooltip.rotulo{display:none}
+.z-medio .leaflet-tooltip.rotulo .sub,.z-medio .leaflet-tooltip.rotulo br{display:none}
 .leaflet-tooltip.rotulo .sub{font-size:10.5px;color:#555}
 .leaflet-tooltip.rotulo.cand{background:rgba(243,235,255,.95);border:1px solid #6a3fb5}
 .rangeLinha{display:grid;grid-template-columns:1fr 46px;gap:8px;align-items:center;margin:4px 0}

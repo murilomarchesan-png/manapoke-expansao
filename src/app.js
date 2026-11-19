@@ -250,10 +250,14 @@
       h += `<div style="margin-top:4px"><b>${esc(METR[k].rot)}</b> (Censo/RAIS/CNPJ)</div>` + PALETA.map((c, i) => `<i class="q" style="background:${c}"></i>${i === 0 ? '< ' + r(lim.q[0]) : i === 4 ? '≥ ' + r(lim.q[3]) : r(lim.q[i - 1]) + '–' + r(lim.q[i])} `).join('<br>');
     }
     if (msg) h += `<div>${esc(msg)}</div>`;
-    const abertoAntes = $('#legDet') ? $('#legDet').open : window.innerWidth > 860;
+    const abertoAntes = $('#legDet') ? $('#legDet').open : (window.innerWidth > 860 && window.innerHeight > 650);
     $('#legenda').innerHTML = `<details id="legDet"${abertoAntes ? ' open' : ''}><summary>Legenda</summary>${h}</details>`;
   }
   map.on('moveend', debounce(() => { if (S.cfg.demanda !== 'off') renderDemanda(); }, 150));
+
+  // rótulos do mapa dependem do zoom: longe = só pontos; médio = nomes; perto = nomes com bairro
+  function zoomRotulos() { const z = map.getZoom(); const c = map.getContainer(); c.classList.toggle('z-longe', z < 11); c.classList.toggle('z-medio', z >= 11 && z < 13); }
+  map.on('zoomend', zoomRotulos); zoomRotulos();
 
   // ---------- cabeçalho ----------
   function renderTopo() {
