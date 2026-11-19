@@ -281,8 +281,7 @@
     $('#nCand').textContent = `(${S.cand.length})`;
     const box = $('#tabelaCand');
     if (!S.cand.length) {
-      box.innerHTML = `<div class="vazio"><p><b>Nenhum local escolhido ainda.</b></p><p class="mut">Busque uma rua ou um bairro acima, ou clique em <b>Marcar no mapa</b>. Cada local escolhido aparece aqui com a nota.</p><button class="btn sec" id="btnSementes">Ver as ${D.candidatas.candidatas.length} áreas sugeridas do mapa anterior</button></div>`;
-      $('#btnSementes').onclick = () => { S.cand = sementeCand(); salvar(); atualizarTudo(); toast('Áreas sugeridas carregadas. Dá para remover cada uma no detalhe.'); };
+      box.innerHTML = '<p class="mut peq">Nenhum local ainda.</p>';
       return;
     }
     const rs = radii();

@@ -18,7 +18,7 @@ Página estática, sem servidor e sem cadastro. Todos os dados são públicos (I
 | **Incluir lojas de shopping** | Caixa no topo. Desmarcada, as lojas de shopping somem do mapa e de todos os cálculos. "Não classificado" não é tratado como loja de rua. |
 | Lojas **sem ponto no mapa** | O topo mostra "cobertura parcial" com os nomes. A sobreposição só usa as lojas localizadas. Na aba **Lojas** dá para marcar o ponto no mapa. |
 | **Bairro do ponto** | Ao marcar ou arrastar um pino, o app mostra o bairro (CNPJ) e o distrito/localidade (CEP). A busca acha ruas e também bairros de qualquer município da base. As lojas e as candidatas mostram o nome com o bairro no mapa. |
-| **Locais escolhidos** | A lista começa vazia: você adiciona buscando uma rua, um bairro, coordenadas ou clicando no mapa. Arraste o pino até o imóvel. Se quiser, há um botão para carregar as 39 áreas sugeridas do mapa anterior. |
+| **Locais escolhidos** | A lista começa vazia: você adiciona buscando uma rua, um bairro, coordenadas ou clicando no mapa. Arraste o pino até o imóvel. |
 | **Nota** | Aba **Detalhe**: cada componente com valor, fonte e percentil. Pesos ajustáveis na aba **Ajustes**. |
 | **Cenário** | Marque 2 ou 3 candidatas na coluna "Cen.": área nova do conjunto e canibalização entre elas. |
 | **Camada de demanda** | Ajustes: moradores, renda, empregos, academias ou restaurantes por km². |
@@ -57,7 +57,7 @@ A grade de demanda tem células de 500 m e cobre a **Grande São Paulo, a Baixad
 
 1. **Nenhuma loja está confirmada como aberta.** A base de 58 registros vem de planilhas e LinkedIn. Cada loja aparece como "não verificada" e dá para tirá-la dos cálculos.
 2. **3 lojas não têm ponto no mapa** (Atibaia, Bauru, Bragança Paulista): faltam rua ou número. Enquanto isso o app mostra "cobertura parcial". A de Vinhedo "incompleta" está oculta como duplicata de Vinhedo.
-3. **Pontos aproximados:** as 39 áreas sugeridas (opcionais) são pontos de **área**, não imóveis. O endereço buscado é o ponto médio do **trecho** da rua. Arraste o pino até o imóvel antes de decidir.
+3. **Pontos aproximados:** as áreas do mapa anterior (arquivo `data/candidatas.json`, não usadas pela tela) são pontos de **área**, não imóveis. O endereço buscado é o ponto médio do **trecho** da rua. Arraste o pino até o imóvel antes de decidir.
 4. **Possíveis duplicatas e divergências** da base (Campinas Cambuí, Santana 435/436 e outras) estão em [`data/RELATORIO_QUALIDADE.md`](data/RELATORIO_QUALIDADE.md).
 5. **Bairro é aproximado:** vem dos endereços mais próximos (quadras de uns 280 m) e segue o nome escrito pelas empresas no CNPJ; nomes populares (por exemplo, de empreendimentos) podem não existir. **Nomes de rua sem acento** na busca (vêm assim da base oficial). A busca ignora acentos, então "Bragança" e "braganca" funcionam igual.
 6. A nota mede **potencial de demanda e cobertura**, não prevê faturamento.
