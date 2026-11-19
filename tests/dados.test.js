@@ -10,23 +10,25 @@ const cand = R('data', 'candidatas.json');
 const grid = R('data', 'demanda_grid.json');
 const refs = R('data', 'referencias.json');
 
-test('Base de lojas: 58 registros, ids únicos, status operacional nunca "confirmada"', () => {
-  assert.equal(lojas.length, 58);
-  assert.equal(new Set(lojas.map((l) => l.id)).size, 58);
-  assert.ok(lojas.every((l) => l.status_operacional === 'nao_verificado'));
+test('Base de lojas: 62 registros, ids únicos, status conferido no Google Maps (19/11)', () => {
+  assert.equal(lojas.length, 62);
+  assert.equal(new Set(lojas.map((l) => l.id)).size, 62);
+  assert.ok(lojas.every((l) => ['aberta_conferida', 'fechada', 'nao_encontrada', 'nao_verificado'].includes(l.status_operacional)));
+  assert.deepEqual(lojas.filter((l) => l.status_operacional === 'fechada').map((l) => l.id), ['valinhos']);
+  for (const id of ['atibaia', 'bauru', 'braganca-paulista', 'araraquara', 'paulinia', 'franca', 'catanduva']) { const l = lojas.find((x) => x.id === id); assert.ok(l && l.lat != null && l.status_operacional === 'aberta_conferida', id); }
 });
 
 test('Lojas: coordenadas só no estado de SP e nenhuma inventada para pendentes', () => {
   const comPonto = lojas.filter((l) => l.lat != null);
-  assert.ok(comPonto.length >= 54);
+  assert.ok(comPonto.length >= 61);
   for (const l of comPonto) assert.ok(l.lat > -25.5 && l.lat < -19.5 && l.lng > -53.5 && l.lng < -44, `${l.id} fora de SP`);
   for (const l of lojas.filter((x) => x.lat == null)) assert.equal(l.geo_qualidade, 'pendente', `${l.id} sem ponto deve estar pendente`);
-  assert.ok(comPonto.every((l) => ['cnefe_numero_exato', 'cnefe_numero_proximo', 'osm_ponto_shopping'].includes(l.geo_qualidade)));
+  assert.ok(comPonto.every((l) => ['cnefe_numero_exato', 'cnefe_numero_proximo', 'osm_ponto_shopping', 'google_maps'].includes(l.geo_qualidade)));
 });
 
-test('Shopping: só "true" ou null (nunca false/"rua"); as 3 lojas de shopping conhecidas', () => {
+test('Shopping: só "true" ou null (nunca false/"rua"); as 6 lojas de shopping conhecidas', () => {
   assert.ok(lojas.every((l) => l.shopping === true || l.shopping === null));
-  assert.deepEqual(lojas.filter((l) => l.shopping).map((l) => l.id).sort(), ['campinas-shopping-dom-pedro', 'shopping-eldorado', 'granja-viana'].sort());
+  assert.deepEqual(lojas.filter((l) => l.shopping).map((l) => l.id).sort(), ['campinas-shopping-dom-pedro', 'shopping-eldorado', 'granja-viana', 'vila-prudente', 'jundiai-anhangabau', 'santos-aparecida'].sort());
 });
 
 test('Nenhum par de lojas a menos de 300 m (duplicata não detectada)', () => {

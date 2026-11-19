@@ -84,6 +84,7 @@
     let excluidasOutras = 0;
     for (const l of lojas) {
       if (ignorar.has(l.id)) { excluidasOutras++; continue; }
+      if (l.status_operacional === 'fechada') { excluidasOutras++; continue; } // loja fechada (conferida): nunca entra nos cálculos
       if (!incShop && l.shopping === true) { excluidasShopping++; continue; }
       if (op.ocultarGrupos && op.ocultarGrupos.includes(l.grupo)) { excluidasOutras++; continue; }
       if (op.ocultarDuplicatas && l.duplicata_de) { excluidasOutras++; continue; }

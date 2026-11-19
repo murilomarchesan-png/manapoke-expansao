@@ -1,25 +1,23 @@
 # Relatório de qualidade da base de lojas
 
-Gerado a partir de `lojas_base.psv` (58 registros do levantamento de 19/11/2026) e do CNEFE (IBGE, Censo 2022).
+Gerado a partir de `lojas_base.psv` (registros do levantamento de 19/11/2026 mais as lojas achadas na conferência pelo Google Maps) e do CNEFE (IBGE, Censo 2022).
 
 ## Resumo
 
-- Registros: **58**  (Grande SP: 24, entorno: 19, só LinkedIn: 15)
-- Status operacional: **nenhuma loja está confirmada como aberta** (cadastro localizado ≠ operação).
-- Com ponto no mapa: **54**; pendentes: **4**
+- Registros: **62**  (Grande SP: 24, entorno: 19, só LinkedIn: 19)
+- Status operacional (conferência manual no Google Maps em 19/11/2026): **59 abertas**, 1 fechada(s), 2 não encontrada(s) (duplicatas prováveis).
+- Com ponto no mapa: **61**; pendentes: **1**
 
 | Qualidade do ponto | Lojas |
 |---|---|
 | Endereço (número exato no CNEFE) | 47 |
 | Endereço (número vizinho no CNEFE) | 6 |
 | Ponto do shopping (OpenStreetMap) | 1 |
-| Pendente | 4 |
+| Ponto da ficha do Google Maps | 7 |
+| Pendente | 1 |
 
 ## Pendentes (marcar o ponto no mapa)
 
-- **Atibaia** (Atibaia): Alameda Prof. Lucas Nogueira Garcez 3333 — 
-- **Bauru** (Bauru): Rua Vereador Joaquim da Silva Martha 15-10 — Só LinkedIn; número com hífen
-- **Bragança Paulista** (Bragança Paulista): Praça Nove de Julho 78 — 
 - **Vinhedo (endereço incompleto)** (Vinhedo): endereço incompleto  — Endereço incompleto; possível duplicata de Vinhedo
 
 ## Possíveis duplicatas
@@ -85,3 +83,7 @@ Gerado a partir de `lojas_base.psv` (58 registros do levantamento de 19/11/2026)
 - São José dos Campos
 - Taubaté
 - Vinhedo (endereço incompleto)
+- Araraquara
+- Paulínia
+- Franca
+- Catanduva

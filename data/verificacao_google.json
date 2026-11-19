@@ -1,0 +1,222 @@
+{
+ "versao": "2026-11-19",
+ "fonte": "Google Maps (consulta manual em 19/11/2026)",
+ "lojas": {
+  "americana": {
+   "status": "aberta_conferida"
+  },
+  "aracatuba-centro": {
+   "status": "aberta_conferida"
+  },
+  "atibaia": {
+   "status": "aberta_conferida",
+   "lat": -23.1381266,
+   "lng": -46.5545709
+  },
+  "alphaville": {
+   "status": "aberta_conferida"
+  },
+  "bauru": {
+   "status": "aberta_conferida",
+   "lat": -22.3317782,
+   "lng": -49.0681385
+  },
+  "braganca-paulista": {
+   "status": "aberta_conferida",
+   "lat": -22.9689413,
+   "lng": -46.5403222
+  },
+  "campinas-barao-geraldo": {
+   "status": "aberta_conferida"
+  },
+  "campinas-cambui": {
+   "status": "aberta_conferida",
+   "obs": "O Google Maps tem uma segunda ficha só de delivery em R. Dr. Sampaio Ferraz, 445."
+  },
+  "campinas-nova-campinas": {
+   "status": "aberta_conferida"
+  },
+  "campinas-shopping-dom-pedro": {
+   "status": "aberta_conferida"
+  },
+  "campinas-taquaral": {
+   "status": "aberta_conferida",
+   "obs": "No Google Maps a ficha se chama \"Mana Poke - Alma Grey Bowl\"."
+  },
+  "granja-viana": {
+   "status": "aberta_conferida"
+  },
+  "guarulhos": {
+   "status": "aberta_conferida"
+  },
+  "hortolandia": {
+   "status": "aberta_conferida"
+  },
+  "indaiatuba": {
+   "status": "aberta_conferida"
+  },
+  "itatiba": {
+   "status": "aberta_conferida"
+  },
+  "itu": {
+   "status": "aberta_conferida"
+  },
+  "jundiai-anhangabau": {
+   "status": "aberta_conferida",
+   "shopping": true,
+   "obs": "No Google Maps: Mana Poke - Jundiaí Shopping."
+  },
+  "jundiai-vila-virginia": {
+   "status": "aberta_conferida"
+  },
+  "limeira": {
+   "status": "aberta_conferida"
+  },
+  "marilia": {
+   "status": "aberta_conferida"
+  },
+  "mogi-das-cruzes": {
+   "status": "aberta_conferida"
+  },
+  "osasco": {
+   "status": "aberta_conferida"
+  },
+  "piracicaba": {
+   "status": "aberta_conferida"
+  },
+  "praia-grande": {
+   "status": "aberta_conferida"
+  },
+  "ribeirao-preto-jardim-botanico": {
+   "status": "aberta_conferida"
+  },
+  "ribeirao-preto-jardim-sumare": {
+   "status": "aberta_conferida"
+  },
+  "rio-claro": {
+   "status": "aberta_conferida"
+  },
+  "santo-andre": {
+   "status": "aberta_conferida"
+  },
+  "santos-aparecida": {
+   "status": "aberta_conferida",
+   "shopping": true,
+   "obs": "No Google Maps: Mana Poke - Praiamar Shopping."
+  },
+  "santos-boqueirao": {
+   "status": "aberta_conferida"
+  },
+  "sorocaba": {
+   "status": "aberta_conferida"
+  },
+  "sao-bernardo": {
+   "status": "aberta_conferida"
+  },
+  "sao-caetano": {
+   "status": "aberta_conferida"
+  },
+  "sao-carlos": {
+   "status": "aberta_conferida"
+  },
+  "sao-jose-do-rio-preto": {
+   "status": "aberta_conferida"
+  },
+  "sao-jose-dos-campos": {
+   "status": "aberta_conferida"
+  },
+  "brooklin": {
+   "status": "aberta_conferida"
+  },
+  "butanta": {
+   "status": "aberta_conferida"
+  },
+  "chacara-flora": {
+   "status": "aberta_conferida"
+  },
+  "higienopolis": {
+   "status": "aberta_conferida"
+  },
+  "ipiranga": {
+   "status": "aberta_conferida"
+  },
+  "jabaquara": {
+   "status": "aberta_conferida",
+   "obs": "Ficha nova no Google Maps, ainda sem avaliações."
+  },
+  "moema": {
+   "status": "aberta_conferida"
+  },
+  "portal-do-morumbi": {
+   "status": "aberta_conferida"
+  },
+  "santana": {
+   "status": "aberta_conferida"
+  },
+  "shopping-eldorado": {
+   "status": "aberta_conferida"
+  },
+  "tatuape": {
+   "status": "aberta_conferida"
+  },
+  "vila-andrade": {
+   "status": "aberta_conferida"
+  },
+  "vila-leopoldina": {
+   "status": "aberta_conferida"
+  },
+  "vila-madalena": {
+   "status": "aberta_conferida"
+  },
+  "vila-mariana": {
+   "status": "aberta_conferida"
+  },
+  "vila-prudente": {
+   "status": "aberta_conferida",
+   "shopping": true,
+   "obs": "No Google Maps: Mana Poke - Shopping Mooca Plaza."
+  },
+  "taubate": {
+   "status": "aberta_conferida"
+  },
+  "vinhedo": {
+   "status": "aberta_conferida"
+  },
+  "valinhos": {
+   "status": "fechada",
+   "obs": "No Google Maps aparece só \"Maninha by Mana Poke Valinhos\" (Av. Invernada 2287) como permanentemente fechado."
+  },
+  "campinas-cambui-galizia": {
+   "status": "nao_encontrada",
+   "obs": "Sem ficha no Google Maps neste endereço; provável duplicata de Campinas Cambuí."
+  },
+  "vinhedo-incompleto": {
+   "status": "nao_encontrada",
+   "obs": "Duplicata da loja de Vinhedo (Av. Benedito Storani 1425), que consta aberta."
+  },
+  "araraquara": {
+   "status": "aberta_conferida",
+   "lat": -21.79159,
+   "lng": -48.179483,
+   "obs": "Loja que não estava no cadastro de 19/11; achada no Google Maps."
+  },
+  "paulinia": {
+   "status": "aberta_conferida",
+   "lat": -22.7742507,
+   "lng": -47.1484952,
+   "obs": "Loja que não estava no cadastro de 19/11; achada no Google Maps."
+  },
+  "franca": {
+   "status": "aberta_conferida",
+   "lat": -20.5530524,
+   "lng": -47.4034581,
+   "obs": "Loja que não estava no cadastro de 19/11; achada no Google Maps."
+  },
+  "catanduva": {
+   "status": "aberta_conferida",
+   "lat": -21.1349625,
+   "lng": -48.974211,
+   "obs": "Loja que não estava no cadastro de 19/11; achada no Google Maps."
+  }
+ }
+}

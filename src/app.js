@@ -9,7 +9,7 @@
   const STORE_KEY = 'mp_expansao_v1';
   const ROT_Q = {
     cnefe_numero_exato: 'Endereço (número exato, CNEFE/IBGE)', cnefe_numero_proximo: 'Endereço (número vizinho, CNEFE/IBGE)',
-    osm_ponto_shopping: 'Ponto do shopping (OpenStreetMap)', manual: 'Ponto marcado por você', pendente: 'Sem ponto no mapa',
+    osm_ponto_shopping: 'Ponto do shopping (OpenStreetMap)', google_maps: 'Ponto da ficha do Google Maps', manual: 'Ponto marcado por você', pendente: 'Sem ponto no mapa',
   };
   const ROT_P = { area_aproximada: 'ponto aproximado da área', trecho_aproximado: 'ponto aproximado do trecho da rua', bairro_aproximado: 'centro aproximado do bairro', pino_manual: 'pino posicionado por você', coordenada: 'coordenada informada' };
   const COR_GRUPO = { rmsp: '#14724f', entorno: '#2a6fb0', outros: '#8a8f98' };
@@ -172,12 +172,14 @@
     if (a.cobertura < 0.5) return '';
     return `<p><b>Raio de 3 km:</b> ${fmt(a.pop)} moradores · renda média R$ ${a.renda_media_resp == null ? '—' : fmt(a.renda_media_resp)}<br>Potencial de consumo ${reais(a.massa_renda)} por mês · ${fmt(a.empregos)} empregos</p>`;
   }
+  const STATUS_TXT = { aberta_conferida: ['aberta no Google Maps em 19/11/2026', 'tag az'], fechada: ['fechada (Google Maps, 19/11/2026)', 'tag verm'], nao_encontrada: ['sem ficha no Google Maps', 'tag lar'], nao_verificado: ['não verificada como aberta', 'tag lar'] };
+  const tagStatus = (l) => { const t = STATUS_TXT[l.status_operacional] || STATUS_TXT.nao_verificado; return `<span class="${t[1]}">${t[0]}</span>`; };
   function popupLoja(l) {
     const q = ROT_Q[l.geo_qualidade] || l.geo_qualidade;
     const ign = S.ignorar.includes(l.id);
     return `<div class="popup"><h4>${esc(l.nome)}</h4>
       <p>${esc([l.logradouro, l.numero].filter(Boolean).join(', '))}${l.complemento ? ' · ' + esc(l.complemento) : ''}<br>${esc([l.bairro, l.cidade].filter(Boolean).join(' · '))}${l.cep ? ' · CEP ' + esc(l.cep) : ''}</p>
-      <p><span class="tag">${l.shopping ? 'shopping' : 'shopping: não classificado'}</span> <span class="tag lar">não verificada como aberta</span></p>
+      <p><span class="tag">${l.shopping ? 'shopping' : 'shopping: não classificado'}</span> ${tagStatus(l)}</p>${l.verificacao_obs ? `<p class="mut">${esc(l.verificacao_obs)}</p>` : ''}
       <p class="mut">Ponto: ${esc(q)}${l.geo_obs ? '. ' + esc(l.geo_obs) : ''}</p>
       <p class="mut">Fonte do cadastro: ${esc(l.evidencia || '—')}</p>
       ${resumoLoja(l)}
@@ -345,7 +347,7 @@
     else if (a.agg.cobertura < 0.9) v.push(['', `Só ${fmt(a.agg.cobertura * 100)}% do círculo está na área com dados de demanda; os números de moradores, renda e emprego estão subestimados.`]);
     if (a.r.pct_nova < 25 && F.lojas.length && !c._loja) v.push(['verm', `Só ${fmt(a.r.pct_nova)}% da área do círculo é nova: ${fmt(a.r.pct_coberta)}% já está dentro do raio de lojas existentes. A nota considera a demanda do entorno, mas abrir aqui tende a dividir clientes com essas lojas (canibalização).`]);
     if (c.imovel == null && !c._loja) v.push(['', `Viabilidade do imóvel não informada: a nota é parcial (o peso de ${S.cfg.pesos.imovel} é redistribuído).`]);
-    if (a.r.lojas_dentro.length || a.r.lojas_sobrepostas.length) v.push(['', 'As lojas vizinhas estão como "não verificada como aberta". Confirme se estão operando antes de contar essa sobreposição.']);
+    if (a.r.lojas_dentro.length || a.r.lojas_sobrepostas.length) v.push(['', 'A situação das lojas vizinhas foi conferida no Google Maps em 19/11/2026; confirme com a operação antes de decidir, porque a ficha do Google pode estar desatualizada.']);
     return v;
   }
   function blocoCidade(c, R) {
@@ -404,7 +406,7 @@
     const bd = bairroDe(c.lat, c.lng);
     const resumo = rs.map((R) => { const a = analisar(c, R); return `<button class="resumo${R === S.detR ? ' ativo' : ''}" data-detr="${R}" aria-pressed="${R === S.detR}"><span class="mut">Raio de ${R} km</span><span class="nota grande ${clsNota(a.n.nota)}">${a.n.nota == null ? '—' : Math.round(a.n.nota)}${a.n.parcial && a.n.nota != null ? '*' : ''}</span><span>${veredito(a.n.nota)}${a.n.parcial ? ' · parcial' : ''}</span><span class="mut peq">${fmt(a.r.pct_nova)}% área nova · ${fmt(a.agg.pop)} moradores</span></button>`; }).join('');
     el.innerHTML = `<div class="caixa"><div class="linha"><button class="btn sec" id="btnVoltar">← Ranking</button><button class="btn sec" id="btnCentrar">Centralizar no mapa</button></div>
-      <h2 class="titulo">${eLoja ? 'Loja · ' : S.cand.indexOf(c) + 1 + '. '}${esc(c.nome)}</h2>${eLoja ? '<p class="mut peq">Loja do cadastro de 19/11/2026 (não verificada como aberta). Os números abaixo são da região em volta dela; a sobreposição desconta a própria loja e conta só as outras.</p>' : ''}
+      <h2 class="titulo">${eLoja ? 'Loja · ' : S.cand.indexOf(c) + 1 + '. '}${esc(c.nome)}</h2>${eLoja ? `<p class="mut peq">Loja do cadastro de 19/11/2026 (${(STATUS_TXT[c._loja.status_operacional] || STATUS_TXT.nao_verificado)[0]}). Os números abaixo são da região em volta dela; a sobreposição desconta a própria loja e conta só as outras.</p>` : ''}
       <p class="bairro-linha"><b>Bairro:</b> ${esc(bairroLinha(bd))}${bd && bd.local && bd.local !== bd.bairro ? `<br><span class="mut">Distrito/localidade pelos CEPs: ${esc(bd.local)}</span>` : ''}</p>
       <p class="mut peq">${esc(c.referencia || '')} · ${fmt(c.lat, 5)}, ${fmt(c.lng, 5)} · ${esc(ROT_P[c.precisao] || '')}</p></div>
       <div class="resumos${rs.length > 1 ? ' dois' : ''}">${resumo}</div>
@@ -505,7 +507,7 @@
       const ign = S.ignorar.includes(l.id); const sem = l.lat == null;
       return `<tr><td><input type="checkbox" class="lojaChk" data-id="${esc(l.id)}" ${ign ? '' : 'checked'} aria-label="Considerar ${esc(l.nome)}"></td>
         <td><a href="#" class="lojaIr" data-id="${esc(l.id)}">${esc(l.nome)}</a><br><span class="mut peq">${esc([l.logradouro, l.numero].filter(Boolean).join(', '))} · ${esc(l.cidade)}</span></td>
-        <td>${l.shopping ? '<span class="tag verm">shopping</span>' : ''}${l.duplicata_de ? '<span class="tag">duplicata</span>' : ''}${l.grupo === 'outros' ? '<span class="tag">só LinkedIn</span>' : ''}${l.grupo === 'entorno' ? '<span class="tag az">entorno</span>' : ''}</td>
+        <td>${l.shopping ? '<span class="tag verm">shopping</span>' : ''}${l.duplicata_de ? '<span class="tag">duplicata</span>' : ''}${l.status_operacional === 'fechada' ? '<span class="tag verm">fechada</span>' : ''}${l.status_operacional === 'aberta_conferida' ? '<span class="tag az">aberta</span>' : ''}${l.grupo === 'outros' ? '<span class="tag">só LinkedIn</span>' : ''}${l.grupo === 'entorno' ? '<span class="tag az">entorno</span>' : ''}</td>
         <td class="peq">${sem ? `<button class="btn sec lojaMarcar" data-id="${esc(l.id)}">Marcar no mapa</button>` : esc(ROT_Q[l.geo_qualidade] || '')}</td></tr>`;
     }).join('');
     $('#listaLojas').innerHTML = `<table><thead><tr><th></th><th>Loja</th><th></th><th>Ponto</th></tr></thead><tbody>${linhas}</tbody></table>`;
@@ -527,7 +529,7 @@
     <p>Validação contra o cálculo exato por interseção de setores, em 20 pontos e dois raios: erro mediano de 0,3% em moradores, 0,9% em empregos e 0,2% em renda (máximo de 11% em empregos de um ponto). Detalhes em <code>data/VALIDACAO_DEMANDA.md</code>.</p>
     <p>Cobertura dos dados de demanda: o estado de São Paulo inteiro (645 municípios). Fora dele o app avisa e não calcula nota de demanda.</p>
     <h3>Lojas</h3>
-    <p>Base de ${D.lojas.n} registros do levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificados no CNEFE do IBGE. <b>Nenhuma loja está confirmada como aberta.</b> Duplicatas prováveis: Campinas Cambuí (Galizia) e Vinhedo (incompleto). Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
+    <p>Base de ${D.lojas.n} registros: o levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificado no CNEFE do IBGE, conferido uma a uma no Google Maps no mesmo dia (consulta manual). Resultado: ${D.lojas.lojas.filter((l) => l.status_operacional === 'aberta_conferida').length} com ficha aberta, Valinhos fechada, e 2 duplicatas prováveis sem ficha (Campinas Cambuí – Galizia e Vinhedo incompleto). A conferência achou 4 lojas que faltavam no cadastro (Araraquara, Paulínia, Franca e Catanduva) e pôs no mapa Atibaia, Bauru e Bragança Paulista, que existiam sem ponto. Ficha do Google aberta não prova faturamento nem que a loja seguirá aberta: confirme com a operação. Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
     <h3>O que a nota não é</h3>
     <p><b>A cidade como um todo:</b> o detalhe de cada local compara o raio com a cidade inteira (Censo 2022, RAIS 2025 e CNPJ). O “índice da cidade” é a média simples de quatro posições entre as cidades do app (população, renda, empregos e restaurantes por 10 mil moradores); serve para comparar cidades e não entra na nota do ponto.</p>
     <p><b>Bairro de um ponto:</b> o app descobre o bairro pelos endereços mais próximos: o bairro escrito pelas empresas ativas no CNPJ (Receita Federal, base de 11/10/2026) e, ao lado, o distrito/localidade dos CEPs (IBGE, CNEFE/Censo 2022). É uma referência aproximada, em quadras de uns 280 m. Nomes populares de empreendimento ou de região podem não ser bairro oficial.</p>

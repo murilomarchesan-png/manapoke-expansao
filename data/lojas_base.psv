@@ -17,7 +17,7 @@ hortolandia|Hortolândia|Hortolândia|Parque Ortolândia|Avenida Santana|970|Loj
 indaiatuba|Indaiatuba|Indaiatuba|Vila Castelo Branco|Avenida dos Trabalhadores|116|Loja 22|13338-050||||entorno|Rede|
 itatiba|Itatiba|Itatiba|Jardim Nossa Senhora das Graças|Avenida Prefeito José Maurício de Camargo|320|Sala F-01|13257-410||||entorno|Rede|
 itu|Itu|Itu|Vila Reis|Rua Doutor Benedito Galvão|40||13309-090||||outros|LinkedIn (localidades)|Só LinkedIn
-jundiai-anhangabau|Jundiaí – Anhangabaú|Jundiaí|Anhangabaú|Avenida Nove de Julho|3333||13208-056||||entorno|Rede|
+jundiai-anhangabau|Jundiaí – Anhangabaú|Jundiaí|Anhangabaú|Avenida Nove de Julho|3333||13208-056|||sim|entorno|Rede|
 jundiai-vila-virginia|Jundiaí – Vila Virgínia|Jundiaí|Vila Virgínia|Rua Major Gustavo Adolfo Storch|125|Loja 1|13209-080||||entorno|Rede|
 limeira|Limeira|Limeira|Centro|Avenida Saudades|1460||13480-070||||entorno|Rede|
 marilia|Marília|Marília|Boa Vista|Rua Coronel José Brás|354||17501-570||||outros|LinkedIn (localidades)|Só LinkedIn
@@ -29,7 +29,7 @@ ribeirao-preto-jardim-botanico|Ribeirão Preto Jardim Botânico|Ribeirão Preto|
 ribeirao-preto-jardim-sumare|Ribeirão Preto Jardim Sumaré|Ribeirão Preto|Jardim Sumaré|Rua Eliseu Guilherme|428||14025-020||||outros|LinkedIn (localidades)|Só LinkedIn
 rio-claro|Rio Claro|Rio Claro|Cidade Jardim|Rua 8 CJ|156||13501-090||||outros|LinkedIn (localidades)|Só LinkedIn
 santo-andre|Santo André|Santo André|Jardim|Rua das Esmeraldas|312||09090-770|-23.656|-46.532||rmsp|Rede + mapa|
-santos-aparecida|Santos – Aparecida|Santos|Aparecida|Rua Alexandre Martins|80||11025-905||||entorno|Rede|
+santos-aparecida|Santos – Aparecida|Santos|Aparecida|Rua Alexandre Martins|80||11025-905|||sim|entorno|Rede|
 santos-boqueirao|Santos – Boqueirão|Santos|Boqueirão|Rua Goiás|26||11050-100||||entorno|Rede|
 sorocaba|Sorocaba|Sorocaba|Jardim América|Rua João Wagner Wey|401|Sala B|18046-695||||outros|LinkedIn (localidades)|Só LinkedIn
 sao-bernardo|São Bernardo|São Bernardo do Campo|Nova Petrópolis|Rua Dom Luís|45||09770-290|-23.693|-46.551||rmsp|Rede + mapa|
@@ -52,8 +52,12 @@ vila-andrade|Vila Andrade|São Paulo|Vila Andrade|Rua Antônio da Costa Barbosa|
 vila-leopoldina|Vila Leopoldina|São Paulo|Vila Leopoldina|Rua Carlos Weber|1121||05303-000|-23.528|-46.735||rmsp|Rede + mapa|
 vila-madalena|Vila Madalena|São Paulo|Sumarezinho|Rua Harmonia|223||05435-000|-23.556|-46.691||rmsp|Rede + mapa|
 vila-mariana|Vila Mariana|São Paulo|Vila Mariana|Rua Joaquim Távora|873||04015-001|-23.587|-46.635||rmsp|Rede + mapa|
-vila-prudente|Vila Prudente|São Paulo|Vila Prudente|Rua Capitão Pacheco e Chaves|313||03126-000|-23.582|-46.581||rmsp|Rede|
+vila-prudente|Vila Prudente|São Paulo|Vila Prudente|Rua Capitão Pacheco e Chaves|313||03126-000|-23.582|-46.581|sim|rmsp|Rede|
 taubate|Taubaté|Taubaté||Avenida Itália|350||12030-212||||outros|LinkedIn (localidades)|Só LinkedIn
 valinhos|Valinhos|Valinhos|Parque Nova Suíça|Avenida Invernada|2287||13271-450||||entorno|Rede + delivery|
 vinhedo|Vinhedo|Vinhedo|Santa Rosa|Avenida Benedito Storani|1425||13289-014||||entorno|Rede|
 vinhedo-incompleto|Vinhedo (endereço incompleto)|Vinhedo|Santa Rosa||||13289-014||||outros|LinkedIn (localidades)|Endereço incompleto; possível duplicata de Vinhedo
+araraquara|Araraquara|Araraquara||Avenida Feijó|816||||||outros|Google Maps (19/11/2026)|Achada na verificação de 19/11; não estava no levantamento
+paulinia|Paulínia|Paulínia|Jardim América|Rua Chile|192||||||outros|Google Maps (19/11/2026)|Achada na verificação de 19/11; não estava no levantamento
+franca|Franca|Franca|Jardim Lima|Rua Maria Martins de Araújo|221||||||outros|Google Maps (19/11/2026)|Achada na verificação de 19/11; não estava no levantamento
+catanduva|Catanduva|Catanduva||Rua Treze de Maio|360||||||outros|Google Maps (19/11/2026)|Achada na verificação de 19/11; não estava no levantamento
