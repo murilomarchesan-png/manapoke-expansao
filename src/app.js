@@ -86,16 +86,18 @@
   // ---------- a cidade como um todo (totais do município) ----------
   const MUN = D.municipios ? (() => {
     const cols = D.municipios.colunas;
-    const rows = D.municipios.linhas.map((r) => { const o = {}; cols.forEach((c, i) => (o[c] = r[i])); o.key = norm(o.nome); o.dens = o.pop / (o.area_urb_km2 > 0 ? o.area_urb_km2 : o.area_km2); o.rest10k = (o.restaurantes / o.pop) * 10000; o.acad100k = (o.academias / o.pop) * 100000; return o; });
+    const rows = D.municipios.linhas.map((r) => { const o = {}; cols.forEach((c, i) => (o[c] = r[i])); o.key = norm(o.nome); o.dens = o.pop / (o.area_urb_km2 > 0 ? o.area_urb_km2 : o.area_km2); o.rest10k = (o.restaurantes / o.pop) * 10000; o.acad100k = (o.academias / o.pop) * 100000; o.consumo = o.massa_renda || null; return o; });
     const pr = (campo) => { const v = rows.map((r) => r[campo]).filter((x) => x != null).sort((a, b) => a - b); return (x) => (x == null ? null : (100 * v.filter((y) => y < x).length) / Math.max(1, v.length - 1)); };
-    const pPop = pr('pop'), pRenda = pr('renda'), pEmp = pr('empregos'), pRest = pr('rest10k');
+    const pCons = pr('consumo'), pRenda = pr('renda'), pEmp = pr('empregos'), pRest = pr('rest10k');
     const rank = (campo) => { const v = rows.slice().sort((a, b) => (b[campo] || 0) - (a[campo] || 0)); const m = new Map(); v.forEach((r, i) => m.set(r.cd, i + 1)); return m; };
-    const rkPop = rank('pop'), rkRenda = rank('renda'), rkEmp = rank('empregos');
-    rows.forEach((r) => { const xs = [pPop(r.pop), pRenda(r.renda), pEmp(r.empregos), pRest(r.rest10k)].filter((x) => x != null); r.indice = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null; r.rkPop = rkPop.get(r.cd); r.rkRenda = rkRenda.get(r.cd); r.rkEmp = rkEmp.get(r.cd); });
+    const rkPop = rank('pop'), rkRenda = rank('renda'), rkEmp = rank('empregos'), rkCons = rank('consumo');
+    rows.forEach((r) => { const xs = [pCons(r.consumo), pRenda(r.renda), pEmp(r.empregos), pRest(r.rest10k)].filter((x) => x != null); r.indice = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null; r.rkPop = rkPop.get(r.cd); r.rkRenda = rkRenda.get(r.cd); r.rkEmp = rkEmp.get(r.cd); r.rkCons = rkCons.get(r.cd); });
     return { rows, by: new Map(rows.map((r) => [r.key, r])), n: rows.length };
   })() : null;
   const cidadeDe = (lat, lng) => { const b = bairroDe(lat, lng); return b && MUN ? MUN.by.get(norm(b.mun)) || null : null; };
   const lojasNaCidade = (m) => (F ? F.lojas.filter((l) => norm(l.cidade) === m.key) : []);
+  // potencial de consumo = renda média do responsável x domicílios (Censo 2022), em R$ por mês: proxy de poder de compra, não gasto medido
+  const reais = (n) => (n == null ? '—' : n >= 1e9 ? 'R$ ' + fmt(n / 1e9, 2) + ' bi' : n >= 1e7 ? 'R$ ' + fmt(n / 1e6, 0) + ' mi' : 'R$ ' + fmt(n / 1e6, 1) + ' mi');
   const mil = (n) => (n == null ? '—' : n >= 1e6 ? fmt(n / 1e6, 2) + ' mi' : n >= 1e4 ? fmt(n / 1e3, 0) + ' mil' : fmt(n));
 
   // ---------- filtros e análise ----------
@@ -316,7 +318,7 @@
     const v = [];
     if (c.precisao !== 'pino_manual' && c.precisao !== 'coordenada') v.push(['', `O ponto é ${ROT_P[c.precisao] || 'aproximado'}. Arraste o pino até o imóvel antes de decidir: a sobreposição muda com algumas centenas de metros.`]);
     if (F.naoAvaliadas.length) v.push(['verm', `Cobertura parcial: ${F.lojas.length} de ${F.total} lojas avaliadas. ${F.naoAvaliadas.length} sem ponto no mapa (${F.naoAvaliadas.map((l) => esc(l.nome)).join(', ')}) podem sobrepor esta área e não entraram no cálculo.`]);
-    if (a.agg.cobertura < 0.5) v.push(['verm', 'Este ponto está fora da área com dados de demanda (Grande SP, Baixada Santista e eixo Campinas). Sem nota de demanda; só a geometria foi calculada.']);
+    if (a.agg.cobertura < 0.5) v.push(['verm', 'Este ponto está fora do estado de São Paulo, que é a área com dados de demanda. Sem nota de demanda; só a geometria foi calculada.']);
     else if (a.agg.cobertura < 0.9) v.push(['', `Só ${fmt(a.agg.cobertura * 100)}% do círculo está na área com dados de demanda; os números de moradores, renda e emprego estão subestimados.`]);
     if (a.r.pct_nova < 25 && F.lojas.length) v.push(['verm', `Só ${fmt(a.r.pct_nova)}% da área do círculo é nova: ${fmt(a.r.pct_coberta)}% já está dentro do raio de lojas existentes. A nota considera a demanda do entorno, mas abrir aqui tende a dividir clientes com essas lojas (canibalização).`]);
     if (c.imovel == null) v.push(['', `Viabilidade do imóvel não informada: a nota é parcial (o peso de ${S.cfg.pesos.imovel} é redistribuído).`]);
@@ -325,7 +327,7 @@
   }
   function blocoCidade(c, R) {
     const m = cidadeDe(c.lat, c.lng);
-    if (!m) return '<div class="caixa"><h3>A cidade como um todo</h3><p class="mut">Este ponto está fora das cidades com totais na base (Grande São Paulo, Baixada Santista, Jundiaí e eixo Campinas).</p></div>';
+    if (!m) return '<div class="caixa"><h3>A cidade como um todo</h3><p class="mut">Este ponto está fora do estado de São Paulo, que é a área com totais na base.</p></div>';
     const { agg } = analisar(c, R); const lj = lojasNaCidade(m);
     const lin = (rot, a, b) => `<tr><td>${rot}</td><td>${a}</td><td>${b}</td></tr>`;
     const razao = lj.length ? `${fmt(m.pop / lj.length)} moradores por loja` : '';
@@ -333,6 +335,7 @@
       <table class="cmp"><thead><tr><th></th><th>Raio de ${R} km</th><th>${esc(m.nome)} inteira</th></tr></thead><tbody>
       ${lin('Moradores', fmt(agg.pop), fmt(m.pop))}
       ${lin('Renda média do responsável', agg.renda_media_resp == null ? '—' : 'R$ ' + fmt(agg.renda_media_resp), m.renda ? 'R$ ' + fmt(m.renda) : '—')}
+      ${lin('Potencial de consumo por mês', reais(agg.massa_renda), reais(m.consumo))}
       ${lin('Empregos formais', fmt(agg.empregos), fmt(m.empregos))}
       ${lin('Restaurantes e lanchonetes', fmt(agg.restaurantes), fmt(m.restaurantes))}
       ${lin('Academias', fmt(agg.academias), fmt(m.academias))}
@@ -342,6 +345,7 @@
       <div class="cidade-lista">
         <div><b>${m.rkPop}º</b> em população <span class="mut">entre ${MUN.n} cidades</span></div>
         <div><b>${m.rkRenda || '—'}º</b> em renda <span class="mut">do responsável</span></div>
+        <div><b>${m.rkCons || '—'}º</b> em potencial de consumo <span class="mut">por mês</span></div>
         <div><b>${m.rkEmp}º</b> em empregos <span class="mut">formais</span></div>
         <div><b>${m.indice == null ? '—' : Math.round(m.indice)}</b> índice da cidade <span class="mut">(0 a 100)</span></div>
       </div>
@@ -358,7 +362,7 @@
     const fora = r.lojas_sobrepostas.filter((x) => x.d > R).map((x) => `<li>${esc(x.nome)} <span class="mut">${fmt(x.d, 1)} km</span></li>`).join('') || '<li class="mut">nenhuma</li>';
     const tile = (v, rot) => `<div class="tile"><b>${v}</b><span>${rot}</span></div>`;
     return `<div class="caixa"><h3>Números em volta do ponto · raio de ${R} km</h3>
-      <div class="kpi">${tile(fmt(agg.pop), 'moradores (Censo 2022)')}${tile(agg.renda_media_resp == null ? '—' : 'R$ ' + fmt(agg.renda_media_resp), 'renda média do responsável')}${tile(fmt(agg.empregos), 'empregos formais (RAIS)')}${tile(fmt(agg.densidade_km2), 'moradores por km²')}${tile(fmt(agg.restaurantes), 'restaurantes e lanchonetes (CNPJ)')}${tile(fmt(agg.academias), 'academias ativas (CNPJ)')}</div></div>
+      <div class="kpi">${tile(fmt(agg.pop), 'moradores (Censo 2022)')}${tile(agg.renda_media_resp == null ? '—' : 'R$ ' + fmt(agg.renda_media_resp), 'renda média do responsável')}${tile(reais(agg.massa_renda), 'potencial de consumo por mês (renda somada dos responsáveis)')}${tile(fmt(agg.empregos), 'empregos formais (RAIS)')}${tile(fmt(agg.densidade_km2), 'moradores por km²')}${tile(fmt(agg.restaurantes), 'restaurantes e lanchonetes (CNPJ)')}${tile(fmt(agg.academias), 'academias ativas (CNPJ)')}</div></div>
       <div class="caixa"><h3>Sobreposição com as lojas atuais · ${R} km</h3>
       <div class="barra2" role="img" aria-label="${fmt(r.pct_nova)}% área nova, ${fmt(r.pct_coberta)}% já coberta"><i class="nova" style="width:${Math.max(0, Math.min(100, r.pct_nova))}%"></i><i class="cob" style="width:${Math.max(0, Math.min(100, r.pct_coberta))}%"></i></div>
       <div class="dupla"><div><b class="grande verde">${fmt(r.pct_nova)}%</b><br><span class="mut">área nova (${fmt(r.area_nova_km2, 1)} km²)</span></div><div><b class="grande">${fmt(r.pct_coberta)}%</b><br><span class="mut">já coberta (${fmt(r.area_coberta_km2, 1)} km²)</span></div></div>
@@ -421,22 +425,52 @@
   }
 
   // ---------- cidades ----------
-  S.cid = { ord: 'pop', desc: true, semLoja: false, q: '' };
-  const CID_COLS = [['nome', 'Cidade', (m) => esc(m.nome)], ['pop', 'Moradores', (m) => fmt(m.pop)], ['renda', 'Renda (R$)', (m) => (m.renda ? fmt(m.renda) : '—')], ['empregos', 'Empregos', (m) => fmt(m.empregos)], ['rest10k', 'Rest. / 10 mil', (m) => fmt(m.rest10k, 1)], ['lojas', 'Lojas', (m) => lojasNaCidade(m).length], ['indice', 'Índice', (m) => (m.indice == null ? '—' : Math.round(m.indice))]];
+  S.cid = { ord: 'consumo', desc: true, semLoja: false, q: '', abertas: new Set() };
+  const CID_ORD = [['consumo', 'Potencial de consumo'], ['pop', 'Moradores'], ['renda', 'Renda média do responsável'], ['empregos', 'Empregos formais'], ['rest10k', 'Restaurantes por 10 mil moradores'], ['indice', 'Índice geral'], ['nome', 'Nome (A a Z)']];
+  const bairrosDaCidade = (m) => { const t = D.cidades_bairros; if (!t) return []; const cols = t.colunas; return (t.cidades[m.cd] || []).map((r) => { const o = {}; cols.forEach((c, i) => (o[c] = r[i])); return o; }); };
+  function corpoCidade(m) {
+    const tl = (v, rot) => `<div class="tile"><b>${v}</b><span>${rot}</span></div>`;
+    const lj = lojasNaCidade(m);
+    const bs = bairrosDaCidade(m);
+    const so1 = bs.length === 1 && norm(bs[0].bairro) === m.key;
+    const tab = bs.length && !so1 ? `<table class="cmp bairros"><thead><tr><th>Bairro</th><th>Moradores</th><th>Renda média</th><th>Consumo por mês</th></tr></thead><tbody>${bs.map((x, k) => `<tr class="bi" data-cd="${esc(m.cd)}" data-k="${k}" tabindex="0" title="Ver no mapa"><td>${esc(x.bairro)}</td><td>${fmt(x.pop)}</td><td>${x.renda ? 'R$ ' + fmt(x.renda) : '—'}</td><td>${reais(x.massa_renda)}</td></tr>`).join('')}</tbody></table>
+      <p class="mut peq">Os ${bs.length} bairros com mais moradores, estimados pela grade de 500 m do Censo 2022 (o bairro vem dos endereços mais próximos, CNPJ e CEP). Clique numa linha para ir ao bairro no mapa.</p>`
+      : '<p class="mut peq">A base de endereços só distingue um bairro ou localidade nesta cidade; não dá para listar os principais bairros sem inventar.</p>';
+    return `<div class="kpi">${tl(reais(m.consumo), 'potencial de consumo por mês')}${tl(fmt(m.pop), 'moradores')}${tl(m.renda ? 'R$ ' + fmt(m.renda) : '—', 'renda média do responsável')}${tl(fmt(m.empregos), 'empregos formais')}${tl(fmt(m.restaurantes), 'restaurantes e lanchonetes')}${tl(fmt(m.academias), 'academias')}</div>
+      <p class="mut peq">${m.rkCons || '—'}º em potencial de consumo, ${m.rkPop}º em moradores e ${m.rkRenda || '—'}º em renda entre ${MUN.n} cidades · ${fmt(m.dens)} moradores por km² urbano.</p>
+      <h4>Principais bairros</h4>${tab}
+      <p class="peq">${lj.length ? '<b>Lojas Mana Poke na lista:</b> ' + lj.map((l) => esc(l.nome)).join(', ') : '<span class="mut">Nenhuma loja Mana Poke avaliada nesta cidade.</span>'}</p>
+      <button class="btn cidIr" data-cd="${esc(m.cd)}">Ver a cidade no mapa</button>`;
+  }
   function renderCidades() {
     const el = $('#cidades'); if (!MUN) { el.innerHTML = '<p class="mut">Sem dados de cidades.</p>'; return; }
-    const val = (m, k) => (k === 'lojas' ? lojasNaCidade(m).length : k === 'nome' ? m.nome : m[k]);
+    const val = (m, k) => (k === 'nome' ? m.nome : m[k]);
     let lista = MUN.rows.filter((m) => (!S.cid.semLoja || !lojasNaCidade(m).length) && (!S.cid.q || m.key.includes(norm(S.cid.q))));
     lista.sort((a, b) => { const x = val(a, S.cid.ord), y = val(b, S.cid.ord); const r = typeof x === 'string' ? x.localeCompare(y, 'pt-BR') : (x == null ? -1 : x) - (y == null ? -1 : y); return S.cid.desc ? -r : r; });
-    el.innerHTML = `<div class="caixa"><h3>Cidades: tamanho e potencial</h3>
-      <p class="mut peq">Totais da cidade inteira (Censo 2022, RAIS 2025, CNPJ). O índice é a média simples de quatro posições entre as ${MUN.n} cidades: população, renda, empregos e restaurantes por 10 mil moradores. Clique numa cidade para ir ao mapa.</p>
-      <div class="linha"><input id="cidBusca" type="search" placeholder="Filtrar cidade" value="${esc(S.cid.q)}" aria-label="Filtrar cidade"><label class="peq"><input type="checkbox" id="cidSem" ${S.cid.semLoja ? 'checked' : ''}> só cidades sem loja</label></div>
-      <div class="rolagem alta"><table><thead><tr>${CID_COLS.map(([k, r]) => `<th><button class="ord" data-k="${k}">${r}${S.cid.ord === k ? (S.cid.desc ? ' ▼' : ' ▲') : ''}</button></th>`).join('')}</tr></thead>
-      <tbody>${lista.map((m) => `<tr class="cid" data-cd="${esc(m.cd)}" tabindex="0">${CID_COLS.map(([k, , f]) => `<td>${f(m)}</td>`).join('')}</tr>`).join('') || '<tr><td colspan="7" class="mut">Nenhuma cidade.</td></tr>'}</tbody></table></div></div>`;
+    const card = (m) => { const aberta = S.cid.abertas.has(m.cd); const nl = lojasNaCidade(m).length;
+      return `<details class="cidade" data-cd="${esc(m.cd)}"${aberta ? ' open' : ''}><summary><span class="mais" aria-hidden="true"></span><span class="nm">${esc(m.nome)}${nl ? ` <span class="chip">${nl} loja${nl > 1 ? 's' : ''}</span>` : ''}</span><span class="rs"><b>${reais(m.consumo)}</b> por mês · ${mil(m.pop)} moradores</span><span class="ix" title="Índice geral (0 a 100)">${m.indice == null ? '—' : Math.round(m.indice)}</span></summary><div class="corpo">${aberta ? corpoCidade(m) : ''}</div></details>`; };
+    el.innerHTML = `<div class="caixa"><h3>Cidades do estado de São Paulo</h3>
+      <p class="mut peq">Totais da cidade inteira (Censo 2022, RAIS 2025, CNPJ ativo em 11/10/2026). <b>Potencial de consumo</b> = renda média do responsável × responsáveis com renda declarada, em R$ por mês: mede poder de compra, não é gasto medido nem faturamento. O índice (0 a 100) é a média simples das posições em potencial de consumo, renda, empregos e restaurantes por 10 mil moradores. Abra uma cidade com o <b>+</b>.</p>
+      <div class="filtros"><input id="cidBusca" type="search" placeholder="Filtrar cidade" value="${esc(S.cid.q)}" aria-label="Filtrar cidade">
+        <label class="peq">Ordenar por <select id="cidOrd">${CID_ORD.map(([k, r]) => `<option value="${k}"${S.cid.ord === k ? ' selected' : ''}>${r}</option>`).join('')}</select></label>
+        <button id="cidDir" class="btn" title="Inverter a ordem" aria-label="Inverter a ordem">${S.cid.desc ? '▼ maior primeiro' : '▲ menor primeiro'}</button>
+        <label class="peq"><input type="checkbox" id="cidSem" ${S.cid.semLoja ? 'checked' : ''}> só cidades sem loja</label></div>
+      <p class="mut peq">${lista.length} de ${MUN.n} cidades</p>
+      <div class="lista-cid">${lista.map(card).join('') || '<p class="mut">Nenhuma cidade.</p>'}</div></div>`;
     $('#cidBusca').oninput = debounce((e) => { S.cid.q = e.target.value; const pos = e.target.selectionStart; renderCidades(); const n = $('#cidBusca'); n.focus(); n.setSelectionRange(pos, pos); }, 200);
     $('#cidSem').onchange = (e) => { S.cid.semLoja = e.target.checked; renderCidades(); };
-    $$('.ord', el).forEach((b) => (b.onclick = () => { const k = b.dataset.k; if (S.cid.ord === k) S.cid.desc = !S.cid.desc; else { S.cid.ord = k; S.cid.desc = k !== 'nome'; } renderCidades(); }));
-    $$('tr.cid', el).forEach((tr) => { const ir = () => { const idx = D.ruas_index.municipios.find((x) => x.cd === tr.dataset.cd); if (idx) { map.setView([idx.lat, idx.lng], 12); $('#selMun').value = idx.cd; } }; tr.onclick = ir; tr.onkeydown = (e) => { if (e.key === 'Enter') ir(); }; });
+    $('#cidOrd').onchange = (e) => { S.cid.ord = e.target.value; S.cid.desc = S.cid.ord !== 'nome'; renderCidades(); };
+    $('#cidDir').onclick = () => { S.cid.desc = !S.cid.desc; renderCidades(); };
+    const irCidade = (cd) => { const idx = D.ruas_index.municipios.find((x) => x.cd === cd); if (idx) { map.setView([idx.lat, idx.lng], 12); $('#selMun').value = idx.cd; } };
+    $$('details.cidade', el).forEach((d) => d.addEventListener('toggle', () => {
+      const cd = d.dataset.cd; const m = MUN.rows.find((x) => x.cd === cd);
+      if (d.open) { S.cid.abertas.add(cd); const c = $('.corpo', d); if (!c.firstChild) { c.innerHTML = corpoCidade(m); ligar(c, m); } } else S.cid.abertas.delete(cd);
+    }));
+    function ligar(c, m) {
+      $$('.cidIr', c).forEach((b) => (b.onclick = () => irCidade(b.dataset.cd)));
+      $$('tr.bi', c).forEach((tr) => { const ir = () => { const bb = bairrosDaCidade(m)[Number(tr.dataset.k)]; if (bb && bb.lat != null) map.setView([bb.lat, bb.lng], 14); }; tr.onclick = ir; tr.onkeydown = (e) => { if (e.key === 'Enter') ir(); }; });
+    }
+    $$('details.cidade[open]', el).forEach((d) => ligar($('.corpo', d), MUN.rows.find((x) => x.cd === d.dataset.cd)));
   }
 
   // ---------- lojas ----------
@@ -466,12 +500,13 @@
     <h3>Dados de demanda (grade de 500 m)</h3>
     <ul><li>${esc(D.demanda_grid.fontes.moradores_domicilios_renda)}</li><li>${esc(D.demanda_grid.fontes.empregos)}</li><li>${esc(D.demanda_grid.fontes.restaurantes)}</li><li>${esc(D.demanda_grid.fontes.academias)}</li></ul>
     <p>Validação contra o cálculo exato por interseção de setores, em 20 pontos e dois raios: erro mediano de 0,3% em moradores, 0,9% em empregos e 0,2% em renda (máximo de 11% em empregos de um ponto). Detalhes em <code>data/VALIDACAO_DEMANDA.md</code>.</p>
-    <p>Cobertura dos dados de demanda: Grande São Paulo, Baixada Santista, Jundiaí e o eixo Campinas–Valinhos–Vinhedo. Fora disso o app avisa e não calcula nota de demanda.</p>
+    <p>Cobertura dos dados de demanda: o estado de São Paulo inteiro (645 municípios). Fora dele o app avisa e não calcula nota de demanda.</p>
     <h3>Lojas</h3>
     <p>Base de ${D.lojas.n} registros do levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificados no CNEFE do IBGE. <b>Nenhuma loja está confirmada como aberta.</b> Duplicatas prováveis: Campinas Cambuí (Galizia) e Vinhedo (incompleto). Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
     <h3>O que a nota não é</h3>
     <p><b>A cidade como um todo:</b> o detalhe de cada local compara o raio com a cidade inteira (Censo 2022, RAIS 2025 e CNPJ). O “índice da cidade” é a média simples de quatro posições entre as cidades do app (população, renda, empregos e restaurantes por 10 mil moradores); serve para comparar cidades e não entra na nota do ponto.</p>
     <p><b>Bairro de um ponto:</b> o app descobre o bairro pelos endereços mais próximos: o bairro escrito pelas empresas ativas no CNPJ (Receita Federal, base de 11/10/2026) e, ao lado, o distrito/localidade dos CEPs (IBGE, CNEFE/Censo 2022). É uma referência aproximada, em quadras de uns 280 m. Nomes populares de empreendimento ou de região podem não ser bairro oficial.</p>
+    <p><b>Potencial de consumo:</b> renda média do responsável × responsáveis com renda declarada (IBGE, Censo 2022), em R$ por mês. É uma medida de poder de compra, não de gasto: não usa a POF e não prevê faturamento. Nos bairros, o valor vem da grade de 500 m e é estimativa.</p>
     <p>É um índice de 0 a 100 do potencial de demanda e da cobertura, com pesos ajustáveis. Não prevê faturamento. Aluguel por bairro e fluxo de pessoas não entram porque não há fonte gratuita confiável para o Brasil; a viabilidade do imóvel é uma nota que você informa.</p>
     <h3>Privacidade</h3><p>Tudo roda no seu navegador. Suas candidatas ficam salvas só neste navegador (ou no arquivo que você exportar). Os mapas de fundo são baixados do OpenStreetMap, CARTO ou Esri.</p>`;
 
@@ -548,7 +583,7 @@
   function cidadeResumo(lat, lng) {
     const m = cidadeDe(lat, lng); if (!m) return '';
     const lj = lojasNaCidade(m);
-    return `<div class="bairro-pin"><b>Cidade:</b> ${esc(m.nome)} · ${fmt(m.pop)} moradores · ${m.rkPop}ª em população entre ${MUN.n} cidades<br><span class="mut">Renda média R$ ${fmt(m.renda)} · ${fmt(m.empregos)} empregos formais · ${lj.length ? lj.length + ' loja(s) Mana Poke' : 'sem loja Mana Poke avaliada'}</span></div>`;
+    return `<div class="bairro-pin"><b>Cidade:</b> ${esc(m.nome)} · ${fmt(m.pop)} moradores · ${m.rkPop}ª em população entre ${MUN.n} cidades<br><span class="mut">Potencial de consumo ${reais(m.consumo)} por mês · renda média R$ ${fmt(m.renda)} · ${fmt(m.empregos)} empregos formais · ${lj.length ? lj.length + ' loja(s) Mana Poke' : 'sem loja Mana Poke avaliada'}</span></div>`;
   }
   function atualizarForm() {
     const f = $('#formNova'); f.hidden = !S.nova; if (!S.nova) return;

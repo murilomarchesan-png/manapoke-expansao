@@ -18,7 +18,8 @@ Página estática, sem servidor e sem cadastro. Todos os dados são públicos (I
 | **Incluir lojas de shopping** | Caixa no topo. Desmarcada, as lojas de shopping somem do mapa e de todos os cálculos. "Não classificado" não é tratado como loja de rua. |
 | Lojas **sem ponto no mapa** | O topo mostra "cobertura parcial" com os nomes. A sobreposição só usa as lojas localizadas. Na aba **Lojas** dá para marcar o ponto no mapa. |
 | **Bairro do ponto** | Ao marcar ou arrastar um pino, o app mostra o bairro (CNPJ) e o distrito/localidade (CEP). A busca acha ruas e também bairros de qualquer município da base. As lojas e as candidatas mostram o nome com o bairro no mapa. |
-| **A cidade como um todo** | No detalhe de cada local, o raio é comparado com a cidade inteira (moradores, renda, empregos, restaurantes, academias), com a posição da cidade entre as 85 do app e as lojas Mana Poke que ela já tem. A aba **Cidades** lista as 85 cidades, ordenável, com filtro "só cidades sem loja". |
+| **A cidade como um todo** | No detalhe de cada local, o raio é comparado com a cidade inteira (moradores, renda, empregos, restaurantes, academias), com a posição da cidade entre as 645 do estado e as lojas Mana Poke que ela já tem. A aba **Cidades** lista as 645 cidades em cartões que abrem com **+**: potencial de consumo, moradores, renda, empregos, restaurantes, academias e os 4 bairros com mais moradores (estimados pela grade de 500 m). Ordena por potencial de consumo, moradores, renda, empregos ou índice, com filtro "só cidades sem loja".
+| **Potencial de consumo** | Renda média do responsável × responsáveis com renda declarada, em R$ por mês (Censo 2022). É proxy de poder de compra da região, **não** é gasto medido nem faturamento. Aparece no raio, na cidade e nos bairros. | |
 | **Locais escolhidos** | A lista começa vazia: você adiciona buscando uma rua, um bairro, coordenadas ou clicando no mapa. Arraste o pino até o imóvel. |
 | **Nota** | Aba **Detalhe**: cada componente com valor, fonte e percentil. Pesos ajustáveis na aba **Ajustes**. |
 | **Cenário** | Marque 2 ou 3 candidatas na coluna "Cen.": área nova do conjunto e canibalização entre elas. |
@@ -47,7 +48,7 @@ Suas candidatas e ajustes ficam salvos só no navegador. Use **Exportar tudo (JS
 | Bairro de cada ponto e busca por bairro | Receita Federal, CNPJ (bairro das empresas ativas, base de 11/10/2026), e distrito/localidade dos CEPs (IBGE, CNEFE) |
 | Fundo do mapa | OpenStreetMap, CARTO ou Esri |
 
-A grade de demanda tem células de 500 m e cobre a **Grande São Paulo, a Baixada Santista, Jundiaí e o eixo Campinas–Valinhos–Vinhedo**. Fora dessa área o app avisa e não calcula nota de demanda.
+A grade de demanda tem células de 500 m e cobre o **estado de São Paulo inteiro (645 municípios)**. Fora dele o app avisa e não calcula nota de demanda.
 
 ## Validação
 

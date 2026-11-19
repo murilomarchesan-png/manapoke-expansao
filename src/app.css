@@ -138,3 +138,25 @@ table.cmp td:first-child{text-align:left}
 .rolagem.alta{max-height:70vh}
 button.ord{border:0;background:none;font-weight:600;cursor:pointer;padding:0;color:inherit;text-align:inherit}
 tr.cid{cursor:pointer}tr.cid:hover,tr.cid:focus-visible{background:var(--verde2)}
+
+/* aba Cidades: lista de cartões que abrem com + */
+.filtros{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0}
+.filtros input[type=search]{flex:1 1 150px;min-width:0}
+.filtros .btn,.cidade .btn{border:1px solid var(--linha);background:var(--card);border-radius:7px;padding:4px 10px;cursor:pointer}
+.lista-cid{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+details.cidade{border:1px solid var(--linha);border-radius:9px;background:var(--card)}
+details.cidade[open]{border-color:var(--verde);box-shadow:var(--sombra)}
+details.cidade>summary{list-style:none;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:8px 10px;cursor:pointer}
+details.cidade>summary::-webkit-details-marker{display:none}
+details.cidade .mais{grid-row:1 / span 2;width:22px;height:22px;border-radius:50%;background:var(--verde2);color:var(--verde);display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1}
+details.cidade .mais::before{content:"+"}
+details.cidade[open] .mais::before{content:"\2212"}
+details.cidade .nm{font-weight:600;grid-column:2}
+details.cidade .rs{grid-column:2;font-size:12.5px;color:var(--mut)}
+details.cidade .rs b{color:var(--tx)}
+details.cidade .ix{grid-column:3;grid-row:1 / span 2;min-width:34px;text-align:center;font-weight:700;border-radius:7px;background:var(--verde2);color:var(--verde);padding:3px 6px}
+.chip{font-size:11px;font-weight:500;border:1px solid var(--verde);color:var(--verde);border-radius:9px;padding:0 6px;margin-left:4px;white-space:nowrap}
+details.cidade .corpo{padding:0 10px 10px}
+details.cidade h4{margin:10px 0 4px;font-size:14px}
+table.cmp.bairros td:first-child{white-space:normal}
+tr.bi{cursor:pointer}tr.bi:hover,tr.bi:focus-visible{background:var(--verde2)}

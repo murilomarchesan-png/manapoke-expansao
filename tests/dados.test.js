@@ -48,7 +48,7 @@ test('Grade de demanda: colunas coerentes, sem valores negativos, totais plausí
   assert.equal(grid.colunas.length, grid.celulas[0].length);
   assert.ok(grid.celulas.every((r) => r.slice(2).every((v) => v >= 0)));
   const pop = grid.celulas.reduce((s, r) => s + r[2], 0);
-  assert.ok(pop > 24e6 && pop < 28e6, 'pop=' + pop); // Grande SP + Baixada + Jundiaí + eixo Campinas (Censo 2022)
+  assert.ok(pop > 44.0e6 && pop < 44.8e6, 'pop=' + pop); // estado de SP inteiro: 44.411.238 (Censo 2022)
 });
 
 test('Referências: 101 quantis ordenados para 3 e 5 km', () => {

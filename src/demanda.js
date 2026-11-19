@@ -22,7 +22,17 @@
     grid.colunas.forEach((c, k) => (col[c] = k));
     for (const r of grid.celulas) idx[r[0] * 100000 + r[1]] = r;
     const caixas = grid.caixas;
-    const dentroCaixa = (lat, lng) => caixas.some((b) => lat >= b.lat_min && lat <= b.lat_max && lng >= b.lng_min && lng <= b.lng_max);
+    const mascara = grid.mascara || null; // contorno real da área coberta: linha j (latitude) -> intervalos [i0, i1] de colunas (longitude)
+    const dentroCaixa = (lat, lng) => {
+      if (mascara) {
+        const iv = mascara[Math.floor((lat - grid.lat0) / grid.dlat)];
+        if (!iv) return false;
+        const i = Math.floor((lng - grid.lng0) / grid.dlng);
+        for (let k = 0; k < iv.length; k++) if (i >= iv[k][0] && i <= iv[k][1]) return true;
+        return false;
+      }
+      return caixas.some((b) => lat >= b.lat_min && lat <= b.lat_max && lng >= b.lng_min && lng <= b.lng_max);
+    };
 
     /** Soma da grade dentro do círculo (centro [lat,lng], raio em km), com fração de célula por subamostragem. */
     function agregar(lat, lng, Rkm) {
@@ -32,7 +42,7 @@
       const j0 = Math.floor((lat - Rkm / KM_LAT - grid.lat0) / grid.dlat);
       const j1 = Math.floor((lat + Rkm / KM_LAT - grid.lat0) / grid.dlat);
       const R2 = Rkm * Rkm;
-      const s = { pop: 0, dom: 0, p1559: 0, emp: 0, rest: 0, acad: 0, rw_med: 0, rw_mean: 0, dom_r: 0 };
+      const s = { pop: 0, dom: 0, p1559: 0, emp: 0, rest: 0, acad: 0, rw_med: 0, rw_mean: 0, dom_r: 0, massa: 0 };
       let amostrasDentro = 0;
       let amostrasCobertas = 0;
       for (let i = i0; i <= i1; i++) {
@@ -56,7 +66,7 @@
           const f = dentro / (SUB * SUB);
           s.pop += r[col.pop] * f; s.dom += r[col.dom] * f; s.p1559 += r[col.p1559] * f;
           s.emp += r[col.empregos] * f; s.rest += r[col.restaurantes] * f; s.acad += r[col.academias] * f;
-          s.rw_med += r[col.renda_med_x_dom] * f; s.rw_mean += r[col.renda_media_x_dom] * f; s.dom_r += r[col.dom_com_renda] * f;
+          s.rw_med += r[col.renda_med_x_dom] * f; s.rw_mean += r[col.renda_media_x_dom] * f; s.dom_r += r[col.dom_com_renda] * f; if (col.massa_renda != null) s.massa += r[col.massa_renda] * f;
         }
       }
       const cobertura = amostrasDentro ? amostrasCobertas / amostrasDentro : 0;
@@ -65,6 +75,8 @@
         pop: s.pop, domicilios: s.dom, pop_15_59: s.p1559, empregos: s.emp, restaurantes: s.rest, academias: s.acad,
         renda_mediana_resp: s.dom_r > 0 ? s.rw_med / s.dom_r : null, renda_media_resp: s.dom_r > 0 ? s.rw_mean / s.dom_r : null,
         densidade_km2: s.pop / (Math.PI * Rkm * Rkm),
+        // potencial de consumo (proxy): renda média do responsável x responsáveis com renda declarada, em R$ por mês (Censo 2022)
+        massa_renda: col.massa_renda != null ? s.massa : null,
       };
     }
     return { agregar, dentroCaixa, grid, idx, col };
