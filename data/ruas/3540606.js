@@ -1,0 +1,1 @@
+window.MP_DATA=window.MP_DATA||{};MP_DATA.ruas=MP_DATA.ruas||{};MP_DATA.ruas["3540606"]={"cd":"3540606","mun":"Porto Feliz","colunas":["rua","bairro","cep","nmin","nmax","lat","lng"],"trechos":[["Samambaia","Porto Feliz","12529899",0,0,-23.10223,-47.42768]]};

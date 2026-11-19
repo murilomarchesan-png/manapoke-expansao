@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mana Poke · Expansão</title>
+<meta name="description" content="Ferramenta de expansão da Mana Poke: raio de 3 e 5 km, sobreposição entre lojas, demanda e nota por ponto candidato.">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="src/app.css">
+</head>
+<body>
+<header id="topo">
+  <div class="marca"><strong>Mana Poke</strong> <span>Expansão</span></div>
+  <div class="grupo" role="group" aria-label="Raio de análise">
+    <span class="rot">Raio</span>
+    <label class="seg"><input type="radio" name="raio" value="3"><span>3 km</span></label>
+    <label class="seg"><input type="radio" name="raio" value="5"><span>5 km</span></label>
+    <label class="seg"><input type="radio" name="raio" value="ambos" checked><span>Os dois</span></label>
+  </div>
+  <label class="chk"><input type="checkbox" id="chkShopping" checked> Incluir lojas de shopping <span id="nShopping" class="mut"></span></label>
+  <div id="cobertura" class="aviso-topo" role="status"></div>
+</header>
+
+<main id="app">
+  <div id="mapaBox">
+    <div id="mapa" aria-label="Mapa"></div>
+    <div id="modoBanner" hidden></div>
+    <div id="legenda"></div>
+  </div>
+
+  <aside id="painel">
+    <nav id="abas" role="tablist">
+      <button role="tab" data-aba="cand" aria-selected="true">Candidatas</button>
+      <button role="tab" data-aba="det">Detalhe</button>
+      <button role="tab" data-aba="cen">Cenário</button>
+      <button role="tab" data-aba="lojas">Lojas</button>
+      <button role="tab" data-aba="cfg">Ajustes</button>
+      <button role="tab" data-aba="sobre">Sobre</button>
+    </nav>
+
+    <section id="aba-cand" class="aba">
+      <div class="caixa">
+        <h3>Adicionar candidata</h3>
+        <div class="linha">
+          <select id="selMun" aria-label="Município"></select>
+        </div>
+        <div class="linha">
+          <input id="busca" type="search" placeholder="Rua e número, bairro, ou coordenadas" autocomplete="off" aria-label="Buscar endereço">
+          <button id="btnBuscar" class="btn">Buscar</button>
+        </div>
+        <ul id="resBusca" class="resultados"></ul>
+        <div class="linha"><button id="btnMarcar" class="btn sec">Marcar no mapa</button><span class="mut peq">ou arraste o pino depois de buscar</span></div>
+        <div id="formNova" hidden>
+          <label>Nome <input id="novaNome" maxlength="80" placeholder="Ex.: Pinheiros, Rua X 123"></label>
+          <div class="mut peq" id="novaPos"></div>
+          <div class="linha"><button id="btnSalvarNova" class="btn">Salvar candidata</button><button id="btnCancelarNova" class="btn sec">Cancelar</button></div>
+        </div>
+      </div>
+      <div class="caixa">
+        <div class="linha topo-tab"><h3>Ranking <span id="nCand" class="mut"></span></h3>
+          <label class="peq">Ordenar <select id="selOrdem"></select></label></div>
+        <div id="tabelaCand" class="rolagem"></div>
+        <p class="mut peq">Clique numa linha para ver o detalhe. A nota de 0 a 100 mede potencial de demanda e cobertura, não prevê faturamento.</p>
+      </div>
+    </section>
+
+    <section id="aba-det" class="aba" hidden><div id="detalhe"></div></section>
+    <section id="aba-cen" class="aba" hidden><div id="cenario"></div></section>
+
+    <section id="aba-lojas" class="aba" hidden>
+      <div class="caixa">
+        <h3>Lojas Mana Poke</h3>
+        <p class="mut peq">Cadastro localizado não é loja confirmada aberta: todas estão como "não verificada". Desmarque uma loja para tirá-la do mapa e dos cálculos.</p>
+        <div class="linha filtros">
+          <label><input type="checkbox" class="fGrupo" value="rmsp" checked> Grande SP</label>
+          <label><input type="checkbox" class="fGrupo" value="entorno" checked> Entorno</label>
+          <label><input type="checkbox" class="fGrupo" value="outros" checked> Só LinkedIn</label>
+          <label><input type="checkbox" id="chkDup" checked> Ocultar duplicatas</label>
+          <label><input type="checkbox" id="chkRotulos"> Nomes no mapa</label>
+        </div>
+        <div id="listaLojas" class="rolagem"></div>
+      </div>
+    </section>
+
+    <section id="aba-cfg" class="aba" hidden>
+      <div class="caixa">
+        <h3>Pesos da nota</h3>
+        <p class="mut peq">Ajuste a importância de cada componente. Os pesos de componentes sem dado são redistribuídos e a nota aparece como parcial.</p>
+        <div id="pesos"></div>
+        <button id="btnPesosPadrao" class="btn sec">Voltar ao padrão</button>
+      </div>
+      <div class="caixa">
+        <h3>Mapa</h3>
+        <div class="linha filtros">
+          <label><input type="checkbox" id="chkCirculos" checked> Círculos das lojas</label>
+          <label><input type="checkbox" id="chkUniao" checked> Área já coberta</label>
+        </div>
+        <label>Camada de demanda
+          <select id="selDemanda">
+            <option value="off">Desligada</option>
+            <option value="pop">Moradores por km²</option>
+            <option value="renda">Renda média do responsável</option>
+            <option value="emp">Empregos formais por km²</option>
+            <option value="acad">Academias por km²</option>
+            <option value="rest">Restaurantes e lanchonetes por km²</option>
+          </select>
+        </label>
+        <label>Fundo do mapa
+          <select id="selBase">
+            <option value="osm">Ruas (OpenStreetMap)</option>
+            <option value="carto">Ruas claras (CARTO)</option>
+            <option value="sat">Satélite (Esri)</option>
+          </select>
+        </label>
+      </div>
+      <div class="caixa">
+        <h3>Salvar e exportar</h3>
+        <p class="mut peq">Suas candidatas, pesos e ajustes ficam salvos só neste navegador. Para levar a outro computador ou ao seu sócio, exporte e importe o arquivo.</p>
+        <div class="linha filtros">
+          <button id="btnExpJson" class="btn">Exportar tudo (JSON)</button>
+          <button id="btnImpJson" class="btn sec">Importar JSON</button>
+          <input id="fileImp" type="file" accept="application/json,.json" hidden>
+        </div>
+        <div class="linha filtros">
+          <button id="btnExpCsv" class="btn sec">Tabela (CSV p/ Excel)</button>
+          <button id="btnExpGeo" class="btn sec">GeoJSON</button>
+          <button id="btnImprimir" class="btn sec">Relatório para imprimir</button>
+        </div>
+        <button id="btnLimpar" class="btn perigo">Apagar meus dados deste navegador</button>
+      </div>
+    </section>
+
+    <section id="aba-sobre" class="aba" hidden><div id="sobre" class="caixa"></div></section>
+  </aside>
+</main>
+
+<section id="relatorio" aria-hidden="true"></section>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="vendor/polygon-clipping.umd.min.js"></script>
+<script src="data/lojas.js"></script>
+<script src="data/candidatas.js"></script>
+<script src="data/demanda_grid.js"></script>
+<script src="data/referencias.js"></script>
+<script src="data/ruas/index.js"></script>
+<script src="src/geo.js"></script>
+<script src="src/demanda.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

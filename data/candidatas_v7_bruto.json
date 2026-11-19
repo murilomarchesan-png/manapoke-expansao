@@ -1,0 +1,284 @@
+[
+ {
+  "name": "Interlagos / Cidade Dutra",
+  "address": "Avenida Senador Teotônio Vilela, 261, São Paulo, SP",
+  "lat": -23.701,
+  "lon": -46.696
+ },
+ {
+  "name": "Jardim Marajoara",
+  "address": "Avenida Nossa Senhora do Sabará, 1100, São Paulo, SP",
+  "lat": -23.676,
+  "lon": -46.691
+ },
+ {
+  "name": "Perdizes",
+  "address": "Rua Cardoso de Almeida, 1000, São Paulo, SP",
+  "lat": -23.536,
+  "lon": -46.675
+ },
+ {
+  "name": "Pompeia",
+  "address": "Rua Clélia, 1000, São Paulo, SP",
+  "lat": -23.527,
+  "lon": -46.691
+ },
+ {
+  "name": "Vila Romana",
+  "address": "Rua Tito, 1000, São Paulo, SP",
+  "lat": -23.529,
+  "lon": -46.705
+ },
+ {
+  "name": "Lapa",
+  "address": "Rua Doze de Outubro, 300, São Paulo, SP",
+  "lat": -23.521,
+  "lon": -46.703
+ },
+ {
+  "name": "Barra Funda",
+  "address": "Avenida Marquês de São Vicente, 1000, São Paulo, SP",
+  "lat": -23.522,
+  "lon": -46.666
+ },
+ {
+  "name": "Jardim das Perdizes",
+  "address": "Avenida Marquês de São Vicente, 2300, São Paulo, SP",
+  "lat": -23.515,
+  "lon": -46.689
+ },
+ {
+  "name": "Paulista",
+  "address": "Avenida Paulista, 1500, São Paulo, SP",
+  "lat": -23.562,
+  "lon": -46.655
+ },
+ {
+  "name": "Henrique Schaumann",
+  "address": "Rua Henrique Schaumann, 500, São Paulo, SP",
+  "lat": -23.558,
+  "lon": -46.679
+ },
+ {
+  "name": "Freguesia do Ó",
+  "address": "Largo da Matriz de Nossa Senhora do Ó, São Paulo, SP",
+  "lat": -23.5,
+  "lon": -46.699
+ },
+ {
+  "name": "Brás / Belenzinho",
+  "address": "Rua Bresser, 1000, São Paulo, SP",
+  "lat": -23.541,
+  "lon": -46.604
+ },
+ {
+  "name": "Bom Retiro",
+  "address": "Rua José Paulino, 500, São Paulo, SP",
+  "lat": -23.526,
+  "lon": -46.637
+ },
+ {
+  "name": "Itaquera",
+  "address": "Avenida José Pinheiro Borges, São Paulo, SP",
+  "lat": -23.541,
+  "lon": -46.469
+ },
+ {
+  "name": "Cidade Tiradentes",
+  "address": "Avenida dos Metalúrgicos, 1000, São Paulo, SP",
+  "lat": -23.583,
+  "lon": -46.41
+ },
+ {
+  "name": "Suzano",
+  "address": "Rua Sete de Setembro, 555, Suzano, SP",
+  "lat": -23.542,
+  "lon": -46.31
+ },
+ {
+  "name": "Itaquaquecetuba",
+  "address": "Praça Padre João Álvares, Itaquaquecetuba, SP",
+  "lat": -23.485,
+  "lon": -46.348
+ },
+ {
+  "name": "Ferraz de Vasconcelos",
+  "address": "Praça da Independência, Ferraz de Vasconcelos, SP",
+  "lat": -23.541,
+  "lon": -46.369
+ },
+ {
+  "name": "Carapicuíba",
+  "address": "Avenida Rui Barbosa, 1000, Carapicuíba, SP",
+  "lat": -23.554,
+  "lon": -46.837
+ },
+ {
+  "name": "Itapevi",
+  "address": "Praça 18 de Fevereiro, Itapevi, SP",
+  "lat": -23.549,
+  "lon": -46.933
+ },
+ {
+  "name": "Barueri Centro",
+  "address": "Boulevard Central, Barueri, SP",
+  "lat": -23.511,
+  "lon": -46.876
+ },
+ {
+  "name": "Osasco Centro",
+  "address": "Rua Tenente Avelar Pires de Azevedo, 81, Osasco, SP",
+  "lat": -23.532,
+  "lon": -46.779
+ },
+ {
+  "name": "Água Branca",
+  "address": "Água Branca, São Paulo, SP, Brasil",
+  "lat": -23.516,
+  "lon": -46.683
+ },
+ {
+  "name": "Alto da Lapa",
+  "address": "Alto da Lapa, São Paulo, SP, Brasil",
+  "lat": -23.526,
+  "lon": -46.717
+ },
+ {
+  "name": "Interlagos",
+  "address": "Interlagos, São Paulo, SP, Brasil",
+  "lat": -23.701,
+  "lon": -46.696
+ },
+ {
+  "name": "Cidade Dutra",
+  "address": "Cidade Dutra, São Paulo, SP, Brasil",
+  "lat": -23.709,
+  "lon": -46.7
+ },
+ {
+  "name": "Jardim São Bento",
+  "address": "Jardim São Bento, São Paulo, SP, Brasil",
+  "lat": -23.49,
+  "lon": -46.665
+ },
+ {
+  "name": "Casa Verde",
+  "address": "Casa Verde, São Paulo, SP, Brasil",
+  "lat": -23.505,
+  "lon": -46.654
+ },
+ {
+  "name": "Bela Vista Osasco",
+  "address": "Bela Vista Osasco, São Paulo, SP, Brasil",
+  "lat": -23.541,
+  "lon": -46.779
+ },
+ {
+  "name": "Suzano Centro",
+  "address": "Suzano Centro, São Paulo, SP, Brasil",
+  "lat": -23.542,
+  "lon": -46.31
+ },
+ {
+  "name": "Vila Carrão",
+  "address": "Vila Carrão, São Paulo, SP, Brasil",
+  "lat": -23.552,
+  "lon": -46.536
+ },
+ {
+  "name": "Mooca",
+  "address": "Mooca, São Paulo, SP, Brasil",
+  "lat": -23.558,
+  "lon": -46.601
+ },
+ {
+  "name": "Anália Franco",
+  "address": "Anália Franco, São Paulo, SP, Brasil",
+  "lat": -23.564,
+  "lon": -46.558
+ },
+ {
+  "name": "Vila Prudente",
+  "address": "Vila Prudente, São Paulo, SP, Brasil",
+  "lat": -23.582,
+  "lon": -46.581
+ },
+ {
+  "name": "Santo Amaro",
+  "address": "Santo Amaro, São Paulo, SP, Brasil",
+  "lat": -23.65,
+  "lon": -46.71
+ },
+ {
+  "name": "Alto da Boa Vista",
+  "address": "Alto da Boa Vista, São Paulo, SP, Brasil",
+  "lat": -23.635,
+  "lon": -46.699
+ },
+ {
+  "name": "Vila Mariana",
+  "address": "Vila Mariana, São Paulo, SP, Brasil",
+  "lat": -23.587,
+  "lon": -46.635
+ },
+ {
+  "name": "Jardins",
+  "address": "Jardins, São Paulo, SP, Brasil",
+  "lat": -23.568,
+  "lon": -46.663
+ },
+ {
+  "name": "Avenida Paulista",
+  "address": "Avenida Paulista, São Paulo, SP, Brasil",
+  "lat": -23.562,
+  "lon": -46.655
+ },
+ {
+  "name": "Brás",
+  "address": "Brás, São Paulo, SP, Brasil",
+  "lat": -23.541,
+  "lon": -46.604
+ },
+ {
+  "name": "Belenzinho",
+  "address": "Belenzinho, São Paulo, SP, Brasil",
+  "lat": -23.544,
+  "lon": -46.594
+ },
+ {
+  "name": "Barueri",
+  "address": "Barueri, São Paulo, SP, Brasil",
+  "lat": -23.511,
+  "lon": -46.876
+ },
+ {
+  "name": "Jardim Bonfiglioli",
+  "address": "Jardim Bonfiglioli, São Paulo, SP, Brasil",
+  "lat": -23.578,
+  "lon": -46.739
+ },
+ {
+  "name": "Pirituba",
+  "address": "Pirituba, São Paulo, SP, Brasil",
+  "lat": -23.486,
+  "lon": -46.723
+ },
+ {
+  "name": "Tucuruvi",
+  "address": "Tucuruvi, São Paulo, SP, Brasil",
+  "lat": -23.479,
+  "lon": -46.61
+ },
+ {
+  "name": "Penha",
+  "address": "Penha, São Paulo, SP, Brasil",
+  "lat": -23.523,
+  "lon": -46.547
+ },
+ {
+  "name": "São Miguel Paulista",
+  "address": "São Miguel Paulista, São Paulo, SP, Brasil",
+  "lat": -23.494,
+  "lon": -46.446
+ }
+]

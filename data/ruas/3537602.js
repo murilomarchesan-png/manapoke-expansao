@@ -1,0 +1,1 @@
+window.MP_DATA=window.MP_DATA||{};MP_DATA.ruas=MP_DATA.ruas||{};MP_DATA.ruas["3537602"]={"cd":"3537602","mun":"Peruíbe","colunas":["rua","bairro","cep","nmin","nmax","lat","lng"],"trechos":[["Dos Jacarandas Mimosos","Peruíbe","02312090",23,624,-23.55761,-46.64235]]};

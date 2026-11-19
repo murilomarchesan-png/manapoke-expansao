@@ -1,0 +1,6 @@
+node_modules/
+tools/
+.claude/
+data/geocode_cnefe_raw.json
+data/geocode_cnefe_final.json
+*.log

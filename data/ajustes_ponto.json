@@ -1,0 +1,9 @@
+{
+  "granja-viana": {
+    "lat": -23.58987,
+    "lng": -46.82446,
+    "qualidade": "osm_ponto_shopping",
+    "fonte": "OpenStreetMap (shopping 'The Square Open Mail', Rod. Raposo Tavares km 22,5)",
+    "obs": "CNEFE não tem número (s/n). Ponto é o centro do shopping no OSM; conferir a loja 201B no local."
+  }
+}

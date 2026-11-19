@@ -1,0 +1,59 @@
+id|nome|cidade|bairro|logradouro|numero|complemento|cep|lat_v7|lon_v7|shopping|grupo|evidencia|obs
+americana|Americana|Americana|Centro|Rua Benedito Soares de Barros|46|Quadra 1, lote B|13465-510||||entorno|Rede|
+aracatuba-centro|Araçatuba Centro|Araçatuba|Centro|Rua General Glicério|1061||16010-080||||outros|LinkedIn (localidades)|Só LinkedIn
+atibaia|Atibaia|Atibaia|Jardim Paulista|Alameda Prof. Lucas Nogueira Garcez|3333||12947-000||||entorno|Rede|
+alphaville|Alphaville|Barueri|Alphaville Industrial|Alameda Araguaia|762|Loja 15, térreo|06455-000|-23.498|-46.85||rmsp|Rede + delivery|
+bauru|Bauru|Bauru|Vila Santa Teresa|Rua Vereador Joaquim da Silva Martha|15-10||17012-030||||outros|LinkedIn (localidades)|Só LinkedIn; número com hífen
+braganca-paulista|Bragança Paulista|Bragança Paulista|Centro|Praça Nove de Julho|78||12900-280||||entorno|Rede|
+campinas-cambui-galizia|Campinas Cambuí - Galízia|Campinas|Cambuí|Rua Dr. Antônio Galízia|181||13024-510||||outros|LinkedIn (localidades)|Só LinkedIn; possível duplicata de Campinas Cambuí (Sampaio Ferraz)
+campinas-barao-geraldo|Campinas – Barão Geraldo|Campinas|Barão Geraldo|Avenida Santa Isabel|571||13084-012||||entorno|Rede|
+campinas-cambui|Campinas – Cambuí|Campinas|Cambuí|Rua Dr. Sampaio Ferraz|207|Outra fonte: nº 447; verificar|13024-430||||entorno|Rede (fontes divergem)|Número diverge entre fontes: 207 x 447
+campinas-nova-campinas|Campinas – Nova Campinas|Campinas|Nova Campinas|Avenida Baden Powell|1108||13040-093||||entorno|Rede|
+campinas-shopping-dom-pedro|Campinas – Shopping Dom Pedro|Campinas|Jardim Santa Genebra|Avenida Guilherme Campos|500||13080-000|||sim|entorno|Rede|Shopping Dom Pedro
+campinas-taquaral|Campinas – Taquaral|Campinas|Novo Taquaral|Rua Arlindo Carpino|22||13077-101||||entorno|Rede|
+granja-viana|Granja Viana|Cotia|Lageadinho|Rodovia Raposo Tavares|s/n|Km 22,5, loja 201B (The Square)|06709-015|||sim|rmsp|Rede + mapa|The Square (shopping/centro comercial)
+guarulhos|Guarulhos|Guarulhos|Jardim Maia|Rua Josephina Mandotti|338||07115-080|-23.454|-46.532||rmsp|Rede + delivery|
+hortolandia|Hortolândia|Hortolândia|Parque Ortolândia|Avenida Santana|970|Lojas 17 e 18|13184-210||||entorno|Rede|
+indaiatuba|Indaiatuba|Indaiatuba|Vila Castelo Branco|Avenida dos Trabalhadores|116|Loja 22|13338-050||||entorno|Rede|
+itatiba|Itatiba|Itatiba|Jardim Nossa Senhora das Graças|Avenida Prefeito José Maurício de Camargo|320|Sala F-01|13257-410||||entorno|Rede|
+itu|Itu|Itu|Vila Reis|Rua Doutor Benedito Galvão|40||13309-090||||outros|LinkedIn (localidades)|Só LinkedIn
+jundiai-anhangabau|Jundiaí – Anhangabaú|Jundiaí|Anhangabaú|Avenida Nove de Julho|3333||13208-056||||entorno|Rede|
+jundiai-vila-virginia|Jundiaí – Vila Virgínia|Jundiaí|Vila Virgínia|Rua Major Gustavo Adolfo Storch|125|Loja 1|13209-080||||entorno|Rede|
+limeira|Limeira|Limeira|Centro|Avenida Saudades|1460||13480-070||||entorno|Rede|
+marilia|Marília|Marília|Boa Vista|Rua Coronel José Brás|354||17501-570||||outros|LinkedIn (localidades)|Só LinkedIn
+mogi-das-cruzes|Mogi das Cruzes|Mogi das Cruzes|Parque Monte Líbano|Rua João Cardoso Pereira|258||08780-260|-23.525|-46.189||rmsp|Rede|
+osasco|Osasco|Osasco|Vila Yara|Rua Dr. Paulo Ferraz da Costa Aguiar|1543||06026-090||||rmsp|Mapa comercial|
+piracicaba|Piracicaba|Piracicaba|São Dimas|Avenida Torquato da Silva Leitão|505|Sala 7|13416-215||||outros|LinkedIn (localidades)|Só LinkedIn
+praia-grande|Praia Grande|Praia Grande|Canto do Forte|Avenida Marechal Mallet|123||11700-400||||entorno|Rede|
+ribeirao-preto-jardim-botanico|Ribeirão Preto Jardim Botânico|Ribeirão Preto|Jardim Botânico|Rua Paschoal Bardaro|1463||14021-655||||outros|LinkedIn (localidades)|Só LinkedIn
+ribeirao-preto-jardim-sumare|Ribeirão Preto Jardim Sumaré|Ribeirão Preto|Jardim Sumaré|Rua Eliseu Guilherme|428||14025-020||||outros|LinkedIn (localidades)|Só LinkedIn
+rio-claro|Rio Claro|Rio Claro|Cidade Jardim|Rua 8 CJ|156||13501-090||||outros|LinkedIn (localidades)|Só LinkedIn
+santo-andre|Santo André|Santo André|Jardim|Rua das Esmeraldas|312||09090-770|-23.656|-46.532||rmsp|Rede + mapa|
+santos-aparecida|Santos – Aparecida|Santos|Aparecida|Rua Alexandre Martins|80||11025-905||||entorno|Rede|
+santos-boqueirao|Santos – Boqueirão|Santos|Boqueirão|Rua Goiás|26||11050-100||||entorno|Rede|
+sorocaba|Sorocaba|Sorocaba|Jardim América|Rua João Wagner Wey|401|Sala B|18046-695||||outros|LinkedIn (localidades)|Só LinkedIn
+sao-bernardo|São Bernardo|São Bernardo do Campo|Nova Petrópolis|Rua Dom Luís|45||09770-290|-23.693|-46.551||rmsp|Rede + mapa|
+sao-caetano|São Caetano|São Caetano do Sul|Santa Paula|Rua Piauí|692||09541-150|-23.619|-46.569||rmsp|Mapa comercial|
+sao-carlos|São Carlos|São Carlos|Centro|Rua Aquidaban|1342||13560-120||||outros|LinkedIn (localidades)|Só LinkedIn
+sao-jose-do-rio-preto|São José do Rio Preto|São José do Rio Preto|Vila Redentora|Rua Penita|3355||15015-820||||outros|LinkedIn (localidades)|Só LinkedIn
+sao-jose-dos-campos|São José dos Campos|São José dos Campos|Vila Ema|Rua do Serimbura|185||12243-360||||outros|LinkedIn (localidades)|Só LinkedIn
+brooklin|Brooklin|São Paulo|Cidade Monções|Rua Quintana|774||04569-011|-23.619|-46.676||rmsp|Rede + mapa|
+butanta|Butantã|São Paulo|Butantã|Avenida Comendador Alberto Bonfiglioli|688||05593-001|-23.579|-46.738||rmsp|Rede + mapa|
+chacara-flora|Chácara Flora|São Paulo|Vila Sofia|Rua Sócrates|686||04671-071|-23.660315|-46.692429||rmsp|Rede + mapa|
+higienopolis|Higienópolis|São Paulo|Vila Buarque|Rua Dr. Vila Nova|315||01222-020|-23.546|-46.646||rmsp|Rede + mapa|
+ipiranga|Ipiranga|São Paulo|Ipiranga|Rua Bom Pastor|1360||04203-001|-23.586|-46.61||rmsp|Rede + mapa|
+jabaquara|Jabaquara|São Paulo|Jabaquara|Avenida Dr. Luís Rocha Miranda|146||04344-010||||rmsp|Rede|Loja do Murilo (em implantação, ver CAPEX)
+moema|Moema|São Paulo|Moema|Avenida Iraí|222||04082-000|-23.603|-46.664||rmsp|Rede + mapa|
+portal-do-morumbi|Portal do Morumbi|São Paulo|Portal do Morumbi|Rua Marechal Hastínfilo de Moura|795||05641-000|-23.624|-46.744||rmsp|Rede + anúncio recente|
+santana|Santana|São Paulo|Santana|Rua Augusto Tolle|435|Nº 436 / sala A em outra fonte|02405-000|-23.503|-46.626||rmsp|Rede (fontes divergem)|Número diverge entre fontes: 435 x 436
+shopping-eldorado|Shopping Eldorado|São Paulo|Pinheiros|Avenida Rebouças|3970|Shopping Eldorado, piso 3|05402-600|-23.572|-46.695|sim|rmsp|Rede|Shopping Eldorado
+tatuape|Tatuapé|São Paulo|Vila Gomes Cardim|Rua Serra de Bragança|514||03318-000|-23.548|-46.562||rmsp|Rede + mapa|
+vila-andrade|Vila Andrade|São Paulo|Vila Andrade|Rua Antônio da Costa Barbosa|134||05717-220|-23.629|-46.737||rmsp|Rede + delivery|
+vila-leopoldina|Vila Leopoldina|São Paulo|Vila Leopoldina|Rua Carlos Weber|1121||05303-000|-23.528|-46.735||rmsp|Rede + mapa|
+vila-madalena|Vila Madalena|São Paulo|Sumarezinho|Rua Harmonia|223||05435-000|-23.556|-46.691||rmsp|Rede + mapa|
+vila-mariana|Vila Mariana|São Paulo|Vila Mariana|Rua Joaquim Távora|873||04015-001|-23.587|-46.635||rmsp|Rede + mapa|
+vila-prudente|Vila Prudente|São Paulo|Vila Prudente|Rua Capitão Pacheco e Chaves|313||03126-000|-23.582|-46.581||rmsp|Rede|
+taubate|Taubaté|Taubaté||Avenida Itália|350||12030-212||||outros|LinkedIn (localidades)|Só LinkedIn
+valinhos|Valinhos|Valinhos|Parque Nova Suíça|Avenida Invernada|2287||13271-450||||entorno|Rede + delivery|
+vinhedo|Vinhedo|Vinhedo|Santa Rosa|Avenida Benedito Storani|1425||13289-014||||entorno|Rede|
+vinhedo-incompleto|Vinhedo (endereço incompleto)|Vinhedo|Santa Rosa||||13289-014||||outros|LinkedIn (localidades)|Endereço incompleto; possível duplicata de Vinhedo
