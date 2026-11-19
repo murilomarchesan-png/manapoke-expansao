@@ -110,10 +110,24 @@
     F.total = F.lojas.length + F.naoAvaliadas.length;
     cache.clear(); uniao = {};
   }
+  // o ponto em foco no detalhe pode ser uma candidata ou uma loja da rede (id 'loja:<id>')
+  function lojaComoPonto(l) {
+    return { id: 'loja:' + l.id, nome: l.nome, lat: l.lat, lng: l.lng, imovel: null, precisao: l.geo_qualidade, _loja: l,
+      referencia: [[l.logradouro, l.numero].filter(Boolean).join(', '), l.bairro, l.cidade].filter(Boolean).join(' · ') };
+  }
+  function pontoSel() {
+    if (typeof S.sel === 'string' && S.sel.startsWith('loja:')) { const l = lojasEf().find((x) => 'loja:' + x.id === S.sel); return l && l.lat != null ? lojaComoPonto(l) : null; }
+    return S.cand.find((x) => x.id === S.sel);
+  }
+  function verLoja(l, mover) {
+    if (l.lat == null) { toast('Esta loja ainda não tem ponto no mapa.'); return; }
+    S.sel = 'loja:' + l.id; renderTabela(); renderCandMapa(); renderSelMapa(); setAba('det');
+    if (mover) map.setView([l.lat, l.lng], Math.max(map.getZoom(), 13));
+  }
   function analisar(c, R) {
     const k = [c.id, R, c.lat, c.lng, c.imovel].join('|');
     if (cache.has(k)) return cache.get(k);
-    const r = G.analisarPonto([c.lat, c.lng], R, F.lojas, R);
+    const r = G.analisarPonto([c.lat, c.lng], R, c._loja ? F.lojas.filter((x) => x.id !== c._loja.id) : F.lojas, R);
     const agg = dem.agregar(c.lat, c.lng, R);
     const n = DM.nota(agg, REFS[R], r.pct_nova, c.imovel, S.cfg.pesos);
     const v = { r, agg, n };
@@ -152,6 +166,12 @@
   const gDem = L.layerGroup().addTo(map); const gUniao = L.layerGroup().addTo(map); const gCirc = L.layerGroup().addTo(map);
   const gLojas = L.layerGroup().addTo(map); const gSel = L.layerGroup().addTo(map); const gCand = L.layerGroup().addTo(map); const gBusca = L.layerGroup().addTo(map);
 
+  function resumoLoja(l) {
+    if (l.lat == null) return '';
+    const a = dem.agregar(l.lat, l.lng, 3);
+    if (a.cobertura < 0.5) return '';
+    return `<p><b>Raio de 3 km:</b> ${fmt(a.pop)} moradores · renda média R$ ${a.renda_media_resp == null ? '—' : fmt(a.renda_media_resp)}<br>Potencial de consumo ${reais(a.massa_renda)} por mês · ${fmt(a.empregos)} empregos</p>`;
+  }
   function popupLoja(l) {
     const q = ROT_Q[l.geo_qualidade] || l.geo_qualidade;
     const ign = S.ignorar.includes(l.id);
@@ -160,7 +180,8 @@
       <p><span class="tag">${l.shopping ? 'shopping' : 'shopping: não classificado'}</span> <span class="tag lar">não verificada como aberta</span></p>
       <p class="mut">Ponto: ${esc(q)}${l.geo_obs ? '. ' + esc(l.geo_obs) : ''}</p>
       <p class="mut">Fonte do cadastro: ${esc(l.evidencia || '—')}</p>
-      <p><button class="btn sec" data-act="ign" data-id="${esc(l.id)}">${ign ? 'Voltar a considerar nos cálculos' : 'Tirar dos cálculos'}</button></p></div>`;
+      ${resumoLoja(l)}
+      <p><button class="btn" data-act="verloja" data-id="${esc(l.id)}">Ver dados da região</button> <button class="btn sec" data-act="ign" data-id="${esc(l.id)}">${ign ? 'Voltar a considerar nos cálculos' : 'Tirar dos cálculos'}</button></p></div>`;
   }
   function renderLojasMapa() {
     gLojas.clearLayers(); gCirc.clearLayers(); gUniao.clearLayers();
@@ -174,6 +195,7 @@
     F.lojas.forEach((l) => {
       const m = L.circleMarker([l.lat, l.lng], { radius: 7, color: l.shopping ? '#b83a2e' : '#fff', weight: l.shopping ? 3 : 2, dashArray: l.shopping ? '3 2' : null, fillColor: COR_GRUPO[l.grupo] || '#888', fillOpacity: 1 });
       m.bindPopup(() => popupLoja(l), { maxWidth: 300 });
+      m.on('click', () => { if (S.sel !== 'loja:' + l.id) { S.sel = 'loja:' + l.id; renderTabela(); renderCandMapa(); renderSelMapa(); setAba('det'); } });
       if (S.cfg.rotLoja) m.bindTooltip(rotuloLoja(l), { permanent: true, direction: 'right', offset: [8, 0], className: 'rotulo' });
       m.addTo(gLojas);
     });
@@ -182,6 +204,7 @@
     const el = e.popup.getElement(); if (!el) return;
     $$('[data-act]', el).forEach((b) => b.addEventListener('click', () => {
       if (b.dataset.act === 'ign') { const id = b.dataset.id; const i = S.ignorar.indexOf(id); if (i >= 0) S.ignorar.splice(i, 1); else S.ignorar.push(id); map.closePopup(); atualizarTudo(); }
+      if (b.dataset.act === 'verloja') { const l = lojasEf().find((x) => x.id === b.dataset.id); map.closePopup(); if (l) verLoja(l, false); }
       if (b.dataset.act === 'ver') { selecionar(b.dataset.id, true); map.closePopup(); }
     }));
   });
@@ -204,7 +227,7 @@
   map.on('zoomend', () => { if (S.cfg.rotCand && (map.getZoom() >= 14) !== candZoomMostra) renderCandMapa(); });
   function renderSelMapa() {
     gSel.clearLayers();
-    const c = S.cand.find((x) => x.id === S.sel);
+    const c = pontoSel();
     if (S.aba === 'cen' && S.cen.length >= 2) {
       for (const R of radii()) {
         const cs = S.cand.filter((x) => S.cen.includes(x.id));
@@ -320,8 +343,8 @@
     if (F.naoAvaliadas.length) v.push(['verm', `Cobertura parcial: ${F.lojas.length} de ${F.total} lojas avaliadas. ${F.naoAvaliadas.length} sem ponto no mapa (${F.naoAvaliadas.map((l) => esc(l.nome)).join(', ')}) podem sobrepor esta área e não entraram no cálculo.`]);
     if (a.agg.cobertura < 0.5) v.push(['verm', 'Este ponto está fora do estado de São Paulo, que é a área com dados de demanda. Sem nota de demanda; só a geometria foi calculada.']);
     else if (a.agg.cobertura < 0.9) v.push(['', `Só ${fmt(a.agg.cobertura * 100)}% do círculo está na área com dados de demanda; os números de moradores, renda e emprego estão subestimados.`]);
-    if (a.r.pct_nova < 25 && F.lojas.length) v.push(['verm', `Só ${fmt(a.r.pct_nova)}% da área do círculo é nova: ${fmt(a.r.pct_coberta)}% já está dentro do raio de lojas existentes. A nota considera a demanda do entorno, mas abrir aqui tende a dividir clientes com essas lojas (canibalização).`]);
-    if (c.imovel == null) v.push(['', `Viabilidade do imóvel não informada: a nota é parcial (o peso de ${S.cfg.pesos.imovel} é redistribuído).`]);
+    if (a.r.pct_nova < 25 && F.lojas.length && !c._loja) v.push(['verm', `Só ${fmt(a.r.pct_nova)}% da área do círculo é nova: ${fmt(a.r.pct_coberta)}% já está dentro do raio de lojas existentes. A nota considera a demanda do entorno, mas abrir aqui tende a dividir clientes com essas lojas (canibalização).`]);
+    if (c.imovel == null && !c._loja) v.push(['', `Viabilidade do imóvel não informada: a nota é parcial (o peso de ${S.cfg.pesos.imovel} é redistribuído).`]);
     if (a.r.lojas_dentro.length || a.r.lojas_sobrepostas.length) v.push(['', 'As lojas vizinhas estão como "não verificada como aberta". Confirme se estão operando antes de contar essa sobreposição.']);
     return v;
   }
@@ -373,28 +396,30 @@
       ${avisos(c, R, a).map(([k, t]) => `<div class="alerta ${k}">${t}</div>`).join('')}`;
   }
   function renderDetalhe() {
-    const c = S.cand.find((x) => x.id === S.sel); const el = $('#detalhe');
-    if (!c) { el.innerHTML = '<div class="caixa"><p class="mut">Selecione uma candidata no ranking ou no mapa.</p></div>'; return; }
+    const c = pontoSel(); const el = $('#detalhe');
+    if (!c) { el.innerHTML = '<div class="caixa"><p class="mut">Selecione uma candidata no ranking ou uma loja no mapa.</p></div>'; return; }
+    const eLoja = !!c._loja;
     const rs = radii();
     if (!rs.includes(S.detR)) S.detR = rs[0];
     const bd = bairroDe(c.lat, c.lng);
     const resumo = rs.map((R) => { const a = analisar(c, R); return `<button class="resumo${R === S.detR ? ' ativo' : ''}" data-detr="${R}" aria-pressed="${R === S.detR}"><span class="mut">Raio de ${R} km</span><span class="nota grande ${clsNota(a.n.nota)}">${a.n.nota == null ? '—' : Math.round(a.n.nota)}${a.n.parcial && a.n.nota != null ? '*' : ''}</span><span>${veredito(a.n.nota)}${a.n.parcial ? ' · parcial' : ''}</span><span class="mut peq">${fmt(a.r.pct_nova)}% área nova · ${fmt(a.agg.pop)} moradores</span></button>`; }).join('');
     el.innerHTML = `<div class="caixa"><div class="linha"><button class="btn sec" id="btnVoltar">← Ranking</button><button class="btn sec" id="btnCentrar">Centralizar no mapa</button></div>
-      <h2 class="titulo">${S.cand.indexOf(c) + 1}. ${esc(c.nome)}</h2>
+      <h2 class="titulo">${eLoja ? 'Loja · ' : S.cand.indexOf(c) + 1 + '. '}${esc(c.nome)}</h2>${eLoja ? '<p class="mut peq">Loja do cadastro de 19/11/2026 (não verificada como aberta). Os números abaixo são da região em volta dela; a sobreposição desconta a própria loja e conta só as outras.</p>' : ''}
       <p class="bairro-linha"><b>Bairro:</b> ${esc(bairroLinha(bd))}${bd && bd.local && bd.local !== bd.bairro ? `<br><span class="mut">Distrito/localidade pelos CEPs: ${esc(bd.local)}</span>` : ''}</p>
       <p class="mut peq">${esc(c.referencia || '')} · ${fmt(c.lat, 5)}, ${fmt(c.lng, 5)} · ${esc(ROT_P[c.precisao] || '')}</p></div>
       <div class="resumos${rs.length > 1 ? ' dois' : ''}">${resumo}</div>
       ${rs.length > 1 ? '<p class="mut peq" style="margin:-4px 2px 8px">Toque num raio para ver os números dele e desenhá-lo no mapa.</p>' : ''}
       ${blocoCidade(c, S.detR)}
       ${blocoRaio(c, S.detR)}
-      <details class="caixa" open><summary><b>Nome, imóvel, aluguel e observações</b></summary>
+      ${eLoja ? '' : `<details class="caixa" open><summary><b>Nome, imóvel, aluguel e observações</b></summary>
       <label>Nome <input id="dNome" maxlength="80" value="${esc(c.nome)}"></label>
       <label>Viabilidade do imóvel (0 a 10; vazio = ainda não avaliou) <input id="dImovel" type="number" min="0" max="10" step="0.5" value="${c.imovel == null ? '' : esc(c.imovel)}"></label>
       <label>Aluguel / condições (anotação sua) <input id="dAluguel" maxlength="120" value="${esc(c.aluguel || '')}"></label>
       <label>Observações <input id="dObs" maxlength="200" value="${esc(c.obs || '')}"></label>
-      <div class="linha"><button class="btn perigo" id="btnRemover">Remover candidata</button></div></details>`;
+      <div class="linha"><button class="btn perigo" id="btnRemover">Remover candidata</button></div></details>`}`;
     $('#btnVoltar').onclick = () => setAba('cand');
     $('#btnCentrar').onclick = () => map.setView([c.lat, c.lng], 14);
+    if (eLoja) return;
     $('#dNome').onchange = (e) => { c.nome = e.target.value.trim().slice(0, 80) || c.nome; salvar(); atualizarTudo(); };
     $('#dImovel').onchange = (e) => { const v = e.target.value === '' ? null : Math.min(10, Math.max(0, parseFloat(e.target.value))); c.imovel = isFinite(v) ? v : null; salvar(); atualizarTudo(); };
     $('#dAluguel').onchange = (e) => { c.aluguel = e.target.value.slice(0, 120); salvar(); };
@@ -719,7 +744,7 @@
     $('#tabelaCand').addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('.item.cand'); if (tr && e.target === tr) { e.preventDefault(); selecionar(tr.dataset.id, true); } });
     $('#listaLojas').addEventListener('click', (e) => {
       const chk = e.target.closest('.lojaChk'); if (chk) { const id = chk.dataset.id; const i = S.ignorar.indexOf(id); if (!chk.checked && i < 0) S.ignorar.push(id); if (chk.checked && i >= 0) S.ignorar.splice(i, 1); salvar(); atualizarTudo(); return; }
-      const ir = e.target.closest('.lojaIr'); if (ir) { e.preventDefault(); const l = lojasEf().find((x) => x.id === ir.dataset.id); if (l && l.lat != null) map.setView([l.lat, l.lng], 15); else toast('Esta loja ainda não tem ponto no mapa.'); return; }
+      const ir = e.target.closest('.lojaIr'); if (ir) { e.preventDefault(); const l = lojasEf().find((x) => x.id === ir.dataset.id); if (l && l.lat != null) { map.setView([l.lat, l.lng], 15); verLoja(l, false); } else toast('Esta loja ainda não tem ponto no mapa.'); return; }
       const mk = e.target.closest('.lojaMarcar'); if (mk) iniciarModo({ tipo: 'loja', id: mk.dataset.id }, 'Clique no mapa onde fica esta loja.');
     });
     $('#btnPesosPadrao').onclick = () => { S.cfg.pesos = Object.assign({}, DM.PESOS_PADRAO); cache.clear(); renderPesos(); refrescarPesos(); };
