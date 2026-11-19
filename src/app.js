@@ -514,12 +514,14 @@
     const ef = lojasEf();
     const linhas = ef.map((l) => {
       const ign = S.ignorar.includes(l.id); const sem = l.lat == null;
-      return `<tr><td><input type="checkbox" class="lojaChk" data-id="${esc(l.id)}" ${ign ? '' : 'checked'} aria-label="Considerar ${esc(l.nome)}"></td>
-        <td><a href="#" class="lojaIr" data-id="${esc(l.id)}">${esc(l.nome)}</a><br><span class="mut peq">${esc([l.logradouro, l.numero].filter(Boolean).join(', '))} · ${esc(l.cidade)}</span></td>
-        <td>${l.shopping ? '<span class="tag verm">shopping</span>' : ''}${l.duplicata_de ? '<span class="tag">duplicata</span>' : ''}${l.status_operacional === 'fechada' ? '<span class="tag verm">fechada</span>' : ''}${l.status_operacional === 'aberta_conferida' ? '<span class="tag az">aberta</span>' : ''}${l.grupo === 'outros' ? '<span class="tag">só LinkedIn</span>' : ''}${l.grupo === 'entorno' ? '<span class="tag az">entorno</span>' : ''}</td>
-        <td class="peq">${sem ? `<button class="btn sec lojaMarcar" data-id="${esc(l.id)}">Marcar no mapa</button>` : esc(ROT_Q[l.geo_qualidade] || '')}</td></tr>`;
+      const tags = `${l.shopping ? '<span class="tag verm">shopping</span>' : ''}${l.duplicata_de ? '<span class="tag">duplicata</span>' : ''}${l.status_operacional === 'fechada' ? '<span class="tag verm">fechada</span>' : ''}${l.status_operacional === 'aberta_conferida' ? '<span class="tag az">aberta</span>' : ''}${l.grupo === 'outros' ? '<span class="tag">só LinkedIn</span>' : ''}${l.grupo === 'entorno' ? '<span class="tag az">entorno</span>' : ''}`;
+      const ponto = sem ? `<button class="btn sec lojaMarcar" data-id="${esc(l.id)}">Marcar no mapa</button>` : esc(ROT_Q[l.geo_qualidade] || '');
+      return `<tr><td class="lj-c"><input type="checkbox" class="lojaChk" data-id="${esc(l.id)}" ${ign ? '' : 'checked'} aria-label="Considerar ${esc(l.nome)}"></td>
+        <td><a href="#" class="lojaIr" data-id="${esc(l.id)}">${esc(l.nome)}</a>
+          <div class="mut peq">${esc([l.logradouro, l.numero].filter(Boolean).join(', '))}${l.logradouro ? ' · ' : ''}${esc(l.cidade)}</div>
+          <div class="lj-t">${tags}<span class="mut peq">${ponto}</span></div></td></tr>`;
     }).join('');
-    $('#listaLojas').innerHTML = `<table><thead><tr><th></th><th>Loja</th><th></th><th>Ponto</th></tr></thead><tbody>${linhas}</tbody></table>`;
+    $('#listaLojas').innerHTML = `<table class="lj"><tbody>${linhas}</tbody></table>`;
   }
 
   // ---------- ajustes ----------

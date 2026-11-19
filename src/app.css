@@ -148,6 +148,13 @@ b.grande{font-size:26px;line-height:1.1}.verde{color:var(--verde)}
 .item .rm{grid-column:2;grid-row:2;justify-self:end;border:0;background:none;color:var(--verm);cursor:pointer;font-size:12.5px;padding:0;text-decoration:underline}
 .item .cen{grid-column:1}
 
+table.lj{table-layout:fixed}
+table.lj td{text-align:left;padding:9px 6px;overflow-wrap:anywhere}
+table.lj td.lj-c{width:34px;text-align:center;padding-left:2px;padding-right:2px}
+table.lj td.lj-c input{width:18px;height:18px;margin:2px 0}
+table.lj .lj-t{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin-top:4px}
+table.lj .lj-t .tag{margin:0}
+#listaLojas.rolagem{max-height:none;overflow:visible}
 table.cmp td:nth-child(n+2),table.cmp th:nth-child(n+2){text-align:right;white-space:nowrap}
 table.cmp td:first-child{text-align:left}
 .cidade-lista{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:8px 0}
