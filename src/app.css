@@ -159,7 +159,7 @@ tr.cid{cursor:pointer}tr.cid:hover,tr.cid:focus-visible{background:var(--verde2)
 /* aba Cidades: lista de cartões que abrem com + */
 .filtros{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0}
 .filtros input[type=search]{flex:1 1 150px;min-width:0}
-.filtros .btn,.cidade .btn{border:1px solid var(--linha);background:var(--card);border-radius:7px;padding:4px 10px;cursor:pointer}
+.filtros .btn,.cidade .btn{border:1px solid var(--linha);background:var(--card);color:var(--tx);border-radius:7px;padding:4px 10px;cursor:pointer}
 .lista-cid{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 details.cidade{border:1px solid var(--linha);border-radius:9px;background:var(--card)}
 details.cidade[open]{border-color:var(--verde);box-shadow:var(--sombra)}
@@ -189,6 +189,9 @@ table.bairros td:first-child{max-width:46%}
 table.bairros{table-layout:fixed}
 table.bairros th:nth-child(1){width:40%}table.bairros th:nth-child(2){width:20%}table.bairros th:nth-child(3){width:20%}table.bairros th:nth-child(4){width:20%}
 table.bairros th,table.bairros td{overflow-wrap:anywhere}
+table.cmp.bairros th:nth-child(n+2){white-space:normal;overflow-wrap:break-word;font-size:12px;line-height:1.2;vertical-align:bottom;padding-left:4px;padding-right:4px}
+table.cmp.bairros td:nth-child(n+2){padding-left:4px;padding-right:4px}
+table.bairros th:nth-child(1){width:34%}table.bairros th:nth-child(2){width:21%}table.bairros th:nth-child(3){width:22%}table.bairros th:nth-child(4){width:23%}
 @media (max-width:860px){
   table.bairros{font-size:12.5px}
   table.bairros th{font-size:12px;line-height:1.2}
