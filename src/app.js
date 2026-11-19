@@ -24,7 +24,7 @@
 
   function lerArmazenado() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
   function salvar() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ v: 1, cfg: S.cfg, cand: S.cand, ajLojas: S.ajLojas, ignorar: S.ignorar, cen: S.cen })); } catch (e) { /* navegador sem armazenamento: segue sem salvar */ }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ v: 1, semV2: true, cfg: S.cfg, cand: S.cand, ajLojas: S.ajLojas, ignorar: S.ignorar, cen: S.cen })); } catch (e) { /* navegador sem armazenamento: segue sem salvar */ }
   }
   function sementeCand() { return D.candidatas.candidatas.map((c) => Object.assign({ aluguel: '' }, c)); }
 
@@ -279,17 +279,21 @@
   }
   function renderTabela() {
     $('#nCand').textContent = `(${S.cand.length})`;
-    if (!S.cand.length) { $('#tabelaCand').innerHTML = '<p class="mut">Nenhuma candidata. Busque um endereço ou marque um ponto no mapa.</p>'; return; }
+    const box = $('#tabelaCand');
+    if (!S.cand.length) {
+      box.innerHTML = `<div class="vazio"><p><b>Nenhum local escolhido ainda.</b></p><p class="mut">Busque uma rua ou um bairro acima, ou clique em <b>Marcar no mapa</b>. Cada local escolhido aparece aqui com a nota.</p><button class="btn sec" id="btnSementes">Ver as ${D.candidatas.candidatas.length} áreas sugeridas do mapa anterior</button></div>`;
+      $('#btnSementes').onclick = () => { S.cand = sementeCand(); salvar(); atualizarTudo(); toast('Áreas sugeridas carregadas. Dá para remover cada uma no detalhe.'); };
+      return;
+    }
     const rs = radii();
     const linhas = ordenar(S.cand).map((c) => {
-      const prox = analisar(c, rs[0]).r.mais_proxima;
-      const cel = rs.map((R) => { const a = analisar(c, R); return `<td>${badge(a.n.nota, a.n.parcial)}<br><span class="mut peq">nova ${fmt(a.r.pct_nova)}%</span></td>`; }).join('');
-      const ap = c.precisao !== 'pino_manual' && c.precisao !== 'coordenada';
-      return `<tr class="cand${c.id === S.sel ? ' sel' : ''}" data-id="${esc(c.id)}"><td>${S.cand.indexOf(c) + 1}. <b>${esc(c.nome)}</b><br><span class="mut peq">${esc(bairroLinha(bairroDe(c.lat, c.lng)))}</span>${ap ? '<span class="tag lar" title="Ponto aproximado: arraste o pino até o imóvel">aprox.</span>' : ''}</td>
-        <td>${prox ? fmt(prox.d, 1) + ' km<br><span class="mut peq">' + esc(prox.nome) + '</span>' : '—'}</td>${cel}
-        <td><input type="checkbox" class="cenChk" data-id="${esc(c.id)}" ${S.cen.includes(c.id) ? 'checked' : ''} aria-label="Incluir no cenário"></td></tr>`;
+      const notas = rs.map((R) => { const a = analisar(c, R); return `<span class="nt"><span class="mut">${R} km</span> ${badge(a.n.nota, a.n.parcial)}</span>`; }).join('');
+      return `<div class="item cand${c.id === S.sel ? ' sel' : ''}" data-id="${esc(c.id)}" role="button" tabindex="0">
+        <div class="txt"><b>${esc(c.nome)}</b><span class="mut peq">${esc(bairroLinha(bairroDe(c.lat, c.lng)))}</span></div>
+        <div class="notas">${notas}</div>
+        <label class="cen" title="Comparar em cenário de abertura conjunta"><input type="checkbox" class="cenChk" data-id="${esc(c.id)}" ${S.cen.includes(c.id) ? 'checked' : ''}> comparar</label></div>`;
     }).join('');
-    $('#tabelaCand').innerHTML = `<table><thead><tr><th>Candidata</th><th>Loja + próxima</th>${rs.map((R) => `<th>${R} km</th>`).join('')}<th title="Cenário de abertura conjunta">Cen.</th></tr></thead><tbody>${linhas}</tbody></table>`;
+    box.innerHTML = linhas;
   }
 
   // ---------- detalhe ----------
@@ -605,8 +609,10 @@
     $('#tabelaCand').addEventListener('click', (e) => {
       const chk = e.target.closest('.cenChk');
       if (chk) { const id = chk.dataset.id; if (chk.checked) { if (!S.cen.includes(id)) S.cen.push(id); } else S.cen = S.cen.filter((x) => x !== id); salvar(); if (S.aba === 'cen') renderCenario(); renderSelMapa(); return; }
-      const tr = e.target.closest('tr.cand'); if (tr) selecionar(tr.dataset.id, true);
+      if (e.target.closest('.cen')) return;
+      const tr = e.target.closest('.item.cand'); if (tr) selecionar(tr.dataset.id, true);
     });
+    $('#tabelaCand').addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('.item.cand'); if (tr && e.target === tr) { e.preventDefault(); selecionar(tr.dataset.id, true); } });
     $('#listaLojas').addEventListener('click', (e) => {
       const chk = e.target.closest('.lojaChk'); if (chk) { const id = chk.dataset.id; const i = S.ignorar.indexOf(id); if (!chk.checked && i < 0) S.ignorar.push(id); if (chk.checked && i >= 0) S.ignorar.splice(i, 1); salvar(); atualizarTudo(); return; }
       const ir = e.target.closest('.lojaIr'); if (ir) { e.preventDefault(); const l = lojasEf().find((x) => x.id === ir.dataset.id); if (l && l.lat != null) map.setView([l.lat, l.lng], 15); else toast('Esta loja ainda não tem ponto no mapa.'); return; }
@@ -616,15 +622,16 @@
     $('#btnExpCsv').onclick = exportarCsv; $('#btnExpGeo').onclick = exportarGeo; $('#btnExpJson').onclick = exportarJson; $('#btnImprimir').onclick = imprimir;
     $('#btnImpJson').onclick = () => $('#fileImp').click();
     $('#fileImp').onchange = (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => importarJson(String(r.result)); r.readAsText(f); e.target.value = ''; };
-    $('#btnLimpar').onclick = () => { if (confirm('Apagar candidatas, ajustes e pesos salvos neste navegador?')) { try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ } S.cfg = PADRAO(); S.cand = sementeCand(); S.ajLojas = {}; S.ignorar = []; S.cen = []; S.sel = null; aplicarCfgNaTela(); atualizarTudo(); toast('Dados apagados; voltei às 39 áreas do V7.'); } };
+    $('#btnLimpar').onclick = () => { if (confirm('Apagar candidatas, ajustes e pesos salvos neste navegador?')) { try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ } S.cfg = PADRAO(); S.cand = []; S.ajLojas = {}; S.ignorar = []; S.cen = []; S.sel = null; aplicarCfgNaTela(); atualizarTudo(); toast('Dados apagados.'); } };
   }
 
   // ---------- início ----------
   const salvo = lerArmazenado();
   if (salvo && salvo.v === 1) {
     if (salvo.cfg) { S.cfg = Object.assign(PADRAO(), salvo.cfg, { pesos: Object.assign({}, DM.PESOS_PADRAO, salvo.cfg.pesos || {}), grupos: Object.assign({ rmsp: true, entorno: true, outros: true }, salvo.cfg.grupos || {}) }); }
-    S.cand = Array.isArray(salvo.cand) ? salvo.cand.filter((c) => c && brasilOk(+c.lat, +c.lng)) : sementeCand(); S.ajLojas = salvo.ajLojas || {}; S.ignorar = salvo.ignorar || []; S.cen = salvo.cen || [];
-  } else S.cand = sementeCand();
+    S.cand = Array.isArray(salvo.cand) ? salvo.cand.filter((c) => c && brasilOk(+c.lat, +c.lng)) : [];
+    if (!salvo.semV2) { S.cand = S.cand.filter((c) => !(c.origem === 'v7' && c.imovel == null && !c.obs && !c.aluguel && c.precisao === 'area_aproximada')); S.cen = S.cen.filter((id) => S.cand.some((c) => c.id === id)); } S.ajLojas = salvo.ajLojas || {}; S.ignorar = salvo.ignorar || []; S.cen = salvo.cen || [];
+  } else S.cand = [];
   trocarBase(bases[S.cfg.base] ? S.cfg.base : 'osm');
   ligar(); aplicarCfgNaTela(); filtrar(); renderTopo(); renderLojasMapa(); renderTabela(); renderCandMapa(); renderDemanda(); atualizarForm(); atualizarLegenda();
   setTimeout(() => map.invalidateSize(), 200);

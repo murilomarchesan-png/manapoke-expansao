@@ -120,3 +120,11 @@ b.grande{font-size:26px;line-height:1.1}.verde{color:var(--verde)}
   #relatorio table{font-size:10.5px}#relatorio section{page-break-inside:avoid}
   .nota{color:#000!important;background:none!important;border:1px solid #000}
 }
+
+.item.cand{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--linha);cursor:pointer}
+.item.cand:hover{background:var(--verde2)}.item.cand.sel{background:var(--verde2);outline:2px solid var(--verde);outline-offset:-2px;border-radius:6px}
+.item .txt{display:flex;flex-direction:column;min-width:0}.item .txt b{font-size:15.5px}
+.item .notas{display:flex;gap:10px;justify-content:flex-end}.item .nt{display:flex;flex-direction:column;align-items:center;font-size:11.5px}
+.item .cen{grid-column:1 / -1;font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:5px}
+.item .cen input{display:inline-block;width:auto;margin:0}
+.vazio{padding:8px 2px}
