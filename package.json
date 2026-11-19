@@ -4,7 +4,7 @@
   "description": "Mana Poke: mapa de expansão com raio de 3 e 5 km, sobreposição entre lojas, demanda e nota por ponto candidato.",
   "private": true,
   "scripts": {
-    "test": "node --test tests/geo.test.js tests/demanda.test.js tests/dados.test.js tests/bairros.test.js",
+    "test": "node --test tests/geo.test.js tests/demanda.test.js tests/dados.test.js tests/bairros.test.js tests/municipios.test.js",
     "servir": "python -m http.server 8765"
   },
   "dependencies": {

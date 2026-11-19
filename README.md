@@ -18,6 +18,7 @@ Página estática, sem servidor e sem cadastro. Todos os dados são públicos (I
 | **Incluir lojas de shopping** | Caixa no topo. Desmarcada, as lojas de shopping somem do mapa e de todos os cálculos. "Não classificado" não é tratado como loja de rua. |
 | Lojas **sem ponto no mapa** | O topo mostra "cobertura parcial" com os nomes. A sobreposição só usa as lojas localizadas. Na aba **Lojas** dá para marcar o ponto no mapa. |
 | **Bairro do ponto** | Ao marcar ou arrastar um pino, o app mostra o bairro (CNPJ) e o distrito/localidade (CEP). A busca acha ruas e também bairros de qualquer município da base. As lojas e as candidatas mostram o nome com o bairro no mapa. |
+| **A cidade como um todo** | No detalhe de cada local, o raio é comparado com a cidade inteira (moradores, renda, empregos, restaurantes, academias), com a posição da cidade entre as 85 do app e as lojas Mana Poke que ela já tem. A aba **Cidades** lista as 85 cidades, ordenável, com filtro "só cidades sem loja". |
 | **Locais escolhidos** | A lista começa vazia: você adiciona buscando uma rua, um bairro, coordenadas ou clicando no mapa. Arraste o pino até o imóvel. |
 | **Nota** | Aba **Detalhe**: cada componente com valor, fonte e percentil. Pesos ajustáveis na aba **Ajustes**. |
 | **Cenário** | Marque 2 ou 3 candidatas na coluna "Cen.": área nova do conjunto e canibalização entre elas. |
@@ -42,6 +43,7 @@ Suas candidatas e ajustes ficam salvos só no navegador. Use **Exportar tudo (JS
 | Empregos formais | RAIS 2025 (Ministério do Trabalho), vínculos por CEP |
 | Restaurantes, lanchonetes e academias ativos | Receita Federal, CNPJ (base de 11/10/2026) |
 | Endereços e coordenadas das lojas, ruas | IBGE, CNEFE (Censo 2022) e CEP |
+| Totais da cidade inteira | IBGE (Censo 2022: moradores, domicílios, renda, faixa etária, área), RAIS 2025 e CNPJ ativo (restaurantes e academias) |
 | Bairro de cada ponto e busca por bairro | Receita Federal, CNPJ (bairro das empresas ativas, base de 11/10/2026), e distrito/localidade dos CEPs (IBGE, CNEFE) |
 | Fundo do mapa | OpenStreetMap, CARTO ou Esri |
 
@@ -70,7 +72,7 @@ src/geo.js         distância, círculos, união e diferença de áreas, cenári
 src/demanda.js     agregação da grade e nota explicável
 src/app.js         interface
 vendor/            Leaflet 1.9.4 e polygon-clipping 0.15.7 (sem CDN)
-data/              lojas, candidatas, grade de demanda, referências, ruas por município, bairros
+data/              municipios (totais por cidade), lojas, candidatas, grade de demanda, referências, ruas por município, bairros
 tests/             testes automáticos
 ```
 

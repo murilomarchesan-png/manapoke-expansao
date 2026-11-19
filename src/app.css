@@ -130,3 +130,11 @@ b.grande{font-size:26px;line-height:1.1}.verde{color:var(--verde)}
 .vazio{padding:8px 2px}
 .item .rm{grid-column:2;grid-row:2;justify-self:end;border:0;background:none;color:var(--verm);cursor:pointer;font-size:12.5px;padding:0;text-decoration:underline}
 .item .cen{grid-column:1}
+
+table.cmp td:nth-child(n+2),table.cmp th:nth-child(n+2){text-align:right;white-space:nowrap}
+table.cmp td:first-child{text-align:left}
+.cidade-lista{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:8px 0}
+.cidade-lista b{font-size:19px}
+.rolagem.alta{max-height:70vh}
+button.ord{border:0;background:none;font-weight:600;cursor:pointer;padding:0;color:inherit;text-align:inherit}
+tr.cid{cursor:pointer}tr.cid:hover,tr.cid:focus-visible{background:var(--verde2)}
