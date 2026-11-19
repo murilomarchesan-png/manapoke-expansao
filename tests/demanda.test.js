@@ -82,3 +82,24 @@ test('Dados reais: moradores de um círculo enorme sobre a Grande SP ≈ total d
   const a = d.agregar(-23.55, -46.63, 50);
   assert.ok(a.pop > 15e6 && a.pop < 24e6, 'pop=' + a.pop); // RMSP tem ~21 milhões (Censo 2022)
 });
+
+test('agregarPoligono: polígono que cobre a célula = célula inteira; metade da célula = metade', () => {
+  const d = D.criar(grid);
+  const x0 = grid.lng0 + ci * grid.dlng, y0 = grid.lat0 + cj * grid.dlat;
+  const quad = (x1, x2) => [[[[x0 + x1, y0 - 0.001], [x0 + x2, y0 - 0.001], [x0 + x2, y0 + grid.dlat + 0.001], [x0 + x1, y0 + grid.dlat + 0.001], [x0 + x1, y0 - 0.001]]]];
+  const inteira = d.agregarPoligono(quad(-0.001, grid.dlng + 0.001));
+  assert.ok(Math.abs(inteira.pop - 1000) < 1e-6 && Math.abs(inteira.empregos - 200) < 1e-6);
+  const metade = d.agregarPoligono(quad(-0.001, grid.dlng / 2));
+  assert.ok(Math.abs(metade.pop - 500) < 1e-6, 'metade=' + metade.pop);
+  assert.equal(d.agregarPoligono([]).pop, 0);
+});
+
+test('agregarPoligono sobre dados reais: círculo de 3 km como polígono ≈ agregar() (diferença < 1%)', () => {
+  const real = require('../data/demanda_grid.json');
+  const G = require('../src/geo.js');
+  const d = D.criar(real);
+  const a = d.agregar(-23.55, -46.63, 3);
+  const p = d.agregarPoligono([[G.circleRing([-23.55, -46.63], 3, 180)]]);
+  assert.ok(Math.abs(p.pop - a.pop) / a.pop < 0.01, `${p.pop} vs ${a.pop}`);
+  assert.ok(Math.abs(p.massa_renda - a.massa_renda) / a.massa_renda < 0.01);
+});

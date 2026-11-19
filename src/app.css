@@ -220,3 +220,7 @@ table.comp th{hyphens:auto;-webkit-hyphens:auto;font-size:11px;line-height:1.15;
 table.comp th.on{color:var(--verde)}
 table.comp th:nth-child(1){width:26%}table.comp th:nth-child(n+2){width:14.8%}table.comp td:nth-child(n+2),table.comp th:nth-child(n+2){white-space:normal}table.comp tbody tr{cursor:pointer}table.comp tbody tr:hover,table.comp tbody tr.sel{background:var(--verde2)}
 table.comp td:first-child{text-align:left;font-weight:600}
+
+table.cen th:nth-child(1){width:19%}table.cen th:nth-child(2){width:25%}table.cen th:nth-child(n+3){width:14%}
+table.cmp.cen td:nth-child(-n+2),table.cmp.cen th:nth-child(-n+2){text-align:left}
+h4.sub{margin:14px 0 6px;font-size:14px}

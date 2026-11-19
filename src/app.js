@@ -464,7 +464,7 @@
   // ---------- cenário ----------
   function renderCenario() {
     const el = $('#cenario'); const cs = S.cand.filter((c) => S.cen.includes(c.id));
-    let h = `<div class="caixa"><h3>Cenário de abertura conjunta</h3><p class="mut peq">Marque 2 ou 3 candidatas na coluna "Cen." do ranking. O cálculo mostra quanto de área nova o conjunto realmente traz e quanto uma candidata "rouba" da outra (canibalização).</p>`;
+    let h = `<div class="caixa"><h3>Cenário de abertura conjunta</h3><p class="mut peq">Marque 2 ou 3 candidatas na coluna "Cen." do ranking. Para cada uma o app mostra a loja existente mais próxima e quanta gente, consumo e emprego existem só na <b>área nova</b> (o que ainda não é atendido pelas lojas atuais). Depois soma o conjunto, descontando o que uma candidata tira da outra.</p>`;
     h += cs.length ? '<ul>' + cs.map((c) => `<li>${esc(c.nome)} <button class="btn sec" data-rm="${esc(c.id)}">tirar</button></li>`).join('') + '</ul>' : '<p class="mut">Nenhuma candidata marcada.</p>';
     h += '</div>';
     if (cs.length >= 2) {
@@ -472,9 +472,18 @@
       for (const R of radii()) {
         const cn = G.cenario(cs.map((c) => ({ id: c.id, nome: c.nome, p: [c.lat, c.lng] })), R, F.lojas, R);
         const ref = G.multiAreaKm2(uniaoLojas(R));
-        const pares = []; for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) { const d = G.haversineKm([cs[i].lat, cs[i].lng], [cs[j].lat, cs[j].lng]); pares.push(`${esc(cs[i].nome)} ↔ ${esc(cs[j].nome)}: ${fmt(d, 1)} km${d < R ? ' <span class="tag verm">uma está dentro do raio da outra</span>' : d < 2 * R ? ' <span class="tag lar">círculos se sobrepõem</span>' : ''}`); }
-        h += `<div class="caixa"><h3>Raio de ${R} km</h3><table><thead><tr><th>Candidata</th><th>Área nova sozinha (km²)</th></tr></thead><tbody>${cn.individuais.map((x) => `<tr><td>${esc(x.nome)}</td><td>${fmt(x.area_nova_km2, 1)}</td></tr>`).join('')}</tbody></table>
-          <div class="kpi"><div><b>${fmt(cn.soma_individual_km2, 1)}</b><span>soma isolada (km²)</span></div><div><b>${fmt(cn.ganho_conjunto_km2, 1)}</b><span>ganho conjunto (km²)</span></div><div><b>${fmt(cn.canibalizacao_km2, 1)}</b><span>canibalização (${fmt(cn.soma_individual_km2 ? (100 * cn.canibalizacao_km2) / cn.soma_individual_km2 : 0)}%)</span></div></div>
+        const linhas = cs.map((c) => { const a = analisar(c, R); const n = dem.agregarPoligono(a.r.geo_nova); return { c, a, n, ok: !a.r.geo_nova.length || n.cobertura >= 0.5 }; });
+        const conj = dem.agregarPoligono(cn.geo_conjunto); const okConj = !cn.geo_conjunto.length || conj.cobertura >= 0.5;
+        const somaPop = linhas.reduce((t, x) => t + x.n.pop, 0), somaCons = linhas.reduce((t, x) => t + (x.n.massa_renda || 0), 0), somaEmp = linhas.reduce((t, x) => t + x.n.empregos, 0);
+        const pares = []; for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) { const d = G.haversineKm([cs[i].lat, cs[i].lng], [cs[j].lat, cs[j].lng]); pares.push(`${esc(cs[i].nome)} ↔ ${esc(cs[j].nome)}: ${fmt(d, 1)} km${d < R ? ' <span class="tag verm">uma está dentro do raio da outra</span>' : d < 2 * R ? ' <span class="tag lar">círculos se sobrepõem</span>' : ' <span class="tag az">sem sobreposição</span>'}`); }
+        const tr = linhas.map(({ c, a, n, ok }) => { const mp = a.r.mais_proxima; return `<tr><td>${esc(c.nome)}</td><td>${mp ? esc(mp.nome) + '<br><span class="mut">' + fmt(mp.d, 1) + ' km</span>' : '—'}</td><td>${fmt(a.r.pct_coberta)}%</td><td>${ok ? mil(n.pop) : '—'}</td><td>${ok ? (n.massa_renda < 1 ? '0' : reais(n.massa_renda).replace('R$ ', '')) : '—'}</td><td>${ok ? mil(n.empregos) : '—'}</td></tr>`; }).join('');
+        const tile = (v, r) => `<div class="tile"><b>${v}</b><span>${r}</span></div>`;
+        h += `<div class="caixa"><h3>Raio de ${R} km: o que cada abertura acrescenta</h3>
+          <p class="mut peq">Compara cada candidata com as lojas existentes (${F.lojas.length} avaliadas). "Já coberto" é a parte do círculo que uma loja atual já alcança; os números ao lado são só da parte nova.</p>
+          <table class="cmp comp cen"><thead><tr><th>Candidata</th><th>Loja atual mais próxima</th><th>Já coberto</th><th>Moradores novos</th><th>Consumo novo (R$/mês)</th><th>Empregos novos</th></tr></thead><tbody>${tr}</tbody></table>
+          <h4 class="sub">O conjunto</h4>
+          <div class="kpi">${tile(okConj ? mil(conj.pop) : '—', 'moradores na área nova do conjunto')}${tile(okConj ? reais(conj.massa_renda) : '—', 'consumo por mês na área nova do conjunto')}${tile(okConj ? mil(conj.empregos) : '—', 'empregos na área nova do conjunto')}${tile(fmt(cn.ganho_conjunto_km2, 1) + ' km²', 'área nova do conjunto')}</div>
+          ${okConj ? `<p class="peq">Somando cada candidata sozinha seriam ${mil(somaPop)} moradores e R$ ${reais(somaCons).replace('R$ ', '')} por mês; o conjunto traz ${mil(conj.pop)} e ${reais(conj.massa_renda)}. A diferença (${mil(Math.max(0, somaPop - conj.pop))} moradores) é o que uma candidata tiraria da outra por estarem perto: ${fmt(cn.soma_individual_km2 ? (100 * cn.canibalizacao_km2) / cn.soma_individual_km2 : 0)}% da área.</p>` : '<p class="peq mut">Parte do cenário fica fora da área com dados de demanda, então os números de gente não são mostrados.</p>'}
           <p class="peq">Hoje as lojas avaliadas cobrem ${fmt(ref, 0)} km²; com este cenário passariam a ${fmt(ref + cn.ganho_conjunto_km2, 0)} km².</p><p class="peq">${pares.join('<br>')}</p></div>`;
       }
     }
