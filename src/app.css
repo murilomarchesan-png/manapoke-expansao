@@ -211,3 +211,12 @@ table.bairros th:nth-child(1){width:34%}table.bairros th:nth-child(2){width:21%}
   #cidades .filtros label.peq{flex:1 1 auto;font-size:13px}
   #cidades .filtros label.peq>select{margin-left:4px}
 }
+
+/* concorrentes e comparativo das lojas */
+i.bola{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px 0 0;vertical-align:baseline;border:1px solid #fff;box-shadow:0 0 0 1px var(--linha)}
+table.comp{table-layout:fixed;font-size:12.5px}
+table.comp th,table.comp td{white-space:normal;overflow-wrap:break-word;padding:5px 3px}
+table.comp th{hyphens:auto;-webkit-hyphens:auto;font-size:11px;line-height:1.15;vertical-align:bottom;cursor:pointer;user-select:none}
+table.comp th.on{color:var(--verde)}
+table.comp th:nth-child(1){width:26%}table.comp th:nth-child(n+2){width:14.8%}table.comp td:nth-child(n+2),table.comp th:nth-child(n+2){white-space:normal}table.comp tbody tr{cursor:pointer}table.comp tbody tr:hover,table.comp tbody tr.sel{background:var(--verde2)}
+table.comp td:first-child{text-align:left;font-weight:600}

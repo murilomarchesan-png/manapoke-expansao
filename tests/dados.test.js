@@ -67,3 +67,17 @@ test('Índice de ruas: cada município listado tem arquivo e contagem coerente',
   assert.ok(sp && sp.n > 60000);
   assert.ok(fs.existsSync(path.join(__dirname, '..', 'data', 'ruas', '3550308.js')));
 });
+
+test('concorrentes (CNPJ): categorias validas, coordenadas no estado de SP, sem duplicata exata', () => {
+  global.window = global.window || {}; global.MP_DATA = (window.MP_DATA = window.MP_DATA || {});
+  require('../data/concorrentes.js');
+  const C = MP_DATA.concorrentes;
+  assert.ok(C.rows.length > 1500);
+  const seen = new Set();
+  for (const [lat, lng, cat, nome] of C.rows) {
+    assert.ok(lat < -19 && lat > -26 && lng < -44 && lng > -54);
+    assert.ok(C.cats[cat] && nome);
+    const k = lat + '|' + lng + '|' + nome; assert.ok(!seen.has(k)); seen.add(k);
+    assert.ok(!/mana poke/i.test(nome));
+  }
+});

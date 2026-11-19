@@ -6,8 +6,8 @@
 <title>Mana Poke · Expansão</title>
 <meta name="description" content="Ferramenta de expansão da Mana Poke: raio de 3 e 5 km, sobreposição entre lojas, demanda e nota por ponto candidato.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="stylesheet" href="vendor/leaflet.css?v=20261119r">
-<link rel="stylesheet" href="src/app.css?v=20261119r">
+<link rel="stylesheet" href="vendor/leaflet.css?v=20261119t">
+<link rel="stylesheet" href="src/app.css?v=20261119t">
 </head>
 <body>
 <header id="topo">
@@ -73,6 +73,23 @@
     <section id="aba-cid" class="aba" hidden><div id="cidades"></div></section>
 
     <section id="aba-lojas" class="aba" hidden>
+      <div class="caixa">
+        <h3>Visão ampla: lojas e concorrentes</h3>
+        <p class="mut peq">Marque quem conta como concorrente para ver no mapa. Vem do CNPJ ativo (Receita, 11/10/2026): restaurantes e lanchonetes cujo nome fantasia indica a categoria, a até 6 km de alguma loja. Passe o mouse (ou toque) num ponto para ver o nome.</p>
+        <div class="linha filtros">
+          <label><input type="checkbox" class="fConc" value="poke"> <i class="bola" style="background:#e5484d"></i>Poke</label>
+          <label><input type="checkbox" class="fConc" value="saudavel"> <i class="bola" style="background:#d99a00"></i>Saudável/fit</label>
+          <label><input type="checkbox" class="fConc" value="acai"> <i class="bola" style="background:#b0287a"></i>Açaí</label>
+          <label><input type="checkbox" class="fConc" value="japones"> <i class="bola" style="background:#0e8c8c"></i>Japonês</label>
+        </div>
+        <div class="linha"><button id="btnVerTodas" class="btn">Ver todas as lojas no mapa</button></div>
+      </div>
+      <div class="caixa">
+        <div class="linha topo-tab"><h3>Comparar as regiões das lojas</h3>
+          <label class="peq">Raio <select id="compRaio"><option value="3">3 km</option><option value="5">5 km</option></select></label></div>
+        <p class="mut peq">Os números em volta de cada loja, lado a lado (Censo 2022, RAIS, CNPJ). Clique no título da coluna para ordenar e na linha para abrir a loja. Serve para ver o que as lojas que vendem bem têm em comum; não mostra faturamento.</p>
+        <div id="compLojas"></div>
+      </div>
       <div class="caixa">
         <h3>Lojas Mana Poke</h3>
         <p class="mut peq">Cada loja foi conferida no Google Maps em 19/11/2026 (ficha aberta não garante que siga operando). A fechada fica fora dos cálculos. Desmarque uma loja para tirá-la do mapa e dos cálculos.</p>
@@ -143,18 +160,19 @@
 <section id="relatorio" aria-hidden="true"></section>
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="vendor/leaflet.js?v=20261119r"></script>
-<script src="vendor/polygon-clipping.umd.min.js?v=20261119r"></script>
-<script src="data/lojas.js?v=20261119r"></script>
-<script src="data/candidatas.js?v=20261119r"></script>
-<script src="data/demanda_grid.js?v=20261119r"></script>
-<script src="data/referencias.js?v=20261119r"></script>
-<script src="data/ruas/index.js?v=20261119r"></script>
-<script src="data/bairros.js?v=20261119r"></script>
-<script src="data/municipios.js?v=20261119r"></script>
-<script src="data/cidades_bairros.js?v=20261119r"></script>
-<script src="src/geo.js?v=20261119r"></script>
-<script src="src/demanda.js?v=20261119r"></script>
-<script src="src/app.js?v=20261119r"></script>
+<script src="vendor/leaflet.js?v=20261119t"></script>
+<script src="vendor/polygon-clipping.umd.min.js?v=20261119t"></script>
+<script src="data/lojas.js?v=20261119t"></script>
+<script src="data/candidatas.js?v=20261119t"></script>
+<script src="data/demanda_grid.js?v=20261119t"></script>
+<script src="data/referencias.js?v=20261119t"></script>
+<script src="data/ruas/index.js?v=20261119t"></script>
+<script src="data/bairros.js?v=20261119t"></script>
+<script src="data/municipios.js?v=20261119t"></script>
+<script src="data/cidades_bairros.js?v=20261119t"></script>
+<script src="data/concorrentes.js?v=20261119t"></script>
+<script src="src/geo.js?v=20261119t"></script>
+<script src="src/demanda.js?v=20261119t"></script>
+<script src="src/app.js?v=20261119t"></script>
 </body>
 </html>

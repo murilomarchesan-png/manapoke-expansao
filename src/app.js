@@ -16,8 +16,8 @@
   const COR_R = { 3: '#14724f', 5: '#2a6fb0' };
 
   // ---------- estado e armazenamento ----------
-  const PADRAO = () => ({ raio: 'ambos', shopping: true, dup: true, grupos: { rmsp: true, entorno: true, outros: true }, rotLoja: true, rotCand: true, circulos: true, uniao: true, demanda: 'off', base: 'osm', pesos: Object.assign({}, DM.PESOS_PADRAO), ordem: 'nota' });
-  const S = { cfg: PADRAO(), cand: [], ajLojas: {}, ignorar: [], cen: [], sel: null, detR: 3, aba: 'cand', nova: null, modo: null };
+  const PADRAO = () => ({ raio: 'ambos', shopping: true, dup: true, grupos: { rmsp: true, entorno: true, outros: true }, rotLoja: true, rotCand: true, conc: { poke: true, saudavel: false, acai: false, japones: false }, circulos: true, uniao: true, demanda: 'off', base: 'osm', pesos: Object.assign({}, DM.PESOS_PADRAO), ordem: 'nota' });
+  const S = { cfg: PADRAO(), cand: [], ajLojas: {}, ignorar: [], cen: [], sel: null, detR: 3, aba: 'cand', nova: null, modo: null, compR: 3, compOrd: 'consumo', compDesc: true };
   let F = null; // lojas filtradas
   const cache = new Map();
   let uniao = {};
@@ -164,13 +164,42 @@
     }
   }));
   const gDem = L.layerGroup().addTo(map); const gUniao = L.layerGroup().addTo(map); const gCirc = L.layerGroup().addTo(map);
-  const gLojas = L.layerGroup().addTo(map); const gSel = L.layerGroup().addTo(map); const gCand = L.layerGroup().addTo(map); const gBusca = L.layerGroup().addTo(map);
+  const gConc = L.layerGroup().addTo(map); const gLojas = L.layerGroup().addTo(map); const gSel = L.layerGroup().addTo(map); const gCand = L.layerGroup().addTo(map); const gBusca = L.layerGroup().addTo(map);
 
+  // ---------- concorrentes (CNPJ ativo: nome fantasia indica poke, saudável/fit, açaí ou japonês) ----------
+  const CONC_CATS = [['poke', 'Poke', '#e5484d'], ['saudavel', 'Saudável/fit', '#d99a00'], ['acai', 'Açaí', '#b0287a'], ['japones', 'Japonês', '#0e8c8c']];
+  const CONC = D.concorrentes ? D.concorrentes.rows.map((r) => ({ lat: r[0], lng: r[1], cat: D.concorrentes.cats[r[2]], nome: r[3] })) : [];
+  const concMemo = new Map();
+  /** Contagem de concorrentes por categoria a até R km de um ponto. */
+  function concPerto(lat, lng, R) {
+    const k = lat.toFixed(5) + '|' + lng.toFixed(5) + '|' + R; if (concMemo.has(k)) return concMemo.get(k);
+    const out = { poke: 0, saudavel: 0, acai: 0, japones: 0, total: 0 };
+    const dl = R / 111, dg = R / 102;
+    for (const c of CONC) { if (Math.abs(c.lat - lat) > dl || Math.abs(c.lng - lng) > dg) continue; if (G.haversineKm([lat, lng], [c.lat, c.lng]) <= R) { out[c.cat]++; out.total++; } }
+    concMemo.set(k, out); return out;
+  }
+  const concTexto = (n) => CONC_CATS.map(([k, r]) => `${r.toLowerCase()} ${n[k]}`).join(' · ');
+  const rendConc = L.canvas({ padding: 0.3 });
+  function renderConc() {
+    gConc.clearLayers();
+    const on = CONC_CATS.filter(([k]) => S.cfg.conc[k]);
+    if (!on.length || !CONC.length) return;
+    const vis = new Set(on.map(([k]) => k)); const cor = Object.fromEntries(CONC_CATS.map(([k, , c]) => [k, c])); const rot = Object.fromEntries(CONC_CATS.map(([k, r]) => [k, r]));
+    for (const c of CONC) {
+      if (!vis.has(c.cat)) continue;
+      L.circleMarker([c.lat, c.lng], { renderer: rendConc, radius: 4, weight: 1, color: '#fff', fillColor: cor[c.cat], fillOpacity: 0.9 }).bindTooltip(`${esc(c.nome)} · ${rot[c.cat]} (CNPJ ativo)`, { direction: 'top' }).addTo(gConc);
+    }
+  }
+  function blocoConc(c, R) {
+    if (!CONC.length) return '';
+    const n = concPerto(c.lat, c.lng, R);
+    return `<div class="caixa"><h3>Concorrentes parecidos · ${R} km</h3><p><b>${fmt(n.poke)}</b> de poke · <b>${fmt(n.saudavel)}</b> saudável/fit · <b>${fmt(n.acai)}</b> açaí · <b>${fmt(n.japones)}</b> japonês</p><p class="mut peq">Contagem de CNPJs ativos (Receita, 11/10/2026) de restaurante ou lanchonete cujo nome fantasia indica a categoria. Quem não tem essas palavras no nome não aparece, e uma loja em endereço aproximado pode cair em outro raio. Ative as categorias na aba Lojas para ver no mapa.</p></div>`;
+  }
   function resumoLoja(l) {
     if (l.lat == null) return '';
     const a = dem.agregar(l.lat, l.lng, 3);
     if (a.cobertura < 0.5) return '';
-    return `<p><b>Raio de 3 km:</b> ${fmt(a.pop)} moradores · renda média R$ ${a.renda_media_resp == null ? '—' : fmt(a.renda_media_resp)}<br>Potencial de consumo ${reais(a.massa_renda)} por mês · ${fmt(a.empregos)} empregos</p>`;
+    return `<p><b>Raio de 3 km:</b> ${fmt(a.pop)} moradores · renda média R$ ${a.renda_media_resp == null ? '—' : fmt(a.renda_media_resp)}<br>Potencial de consumo ${reais(a.massa_renda)} por mês · ${fmt(a.empregos)} empregos</p>${CONC.length ? `<p class="peq">Concorrentes a 3 km (nome parecido): ${concTexto(concPerto(l.lat, l.lng, 3))}</p>` : ''}`;
   }
   const STATUS_TXT = { aberta_conferida: ['aberta no Google Maps em 19/11/2026', 'tag az'], fechada: ['fechada (Google Maps, 19/11/2026)', 'tag verm'], nao_encontrada: ['sem ficha no Google Maps', 'tag lar'], nao_verificado: ['não verificada como aberta', 'tag lar'] };
   const tagStatus = (l) => { const t = STATUS_TXT[l.status_operacional] || STATUS_TXT.nao_verificado; return `<span class="${t[1]}">${t[0]}</span>`; };
@@ -286,6 +315,7 @@
     const k = S.cfg.demanda;
     let h = `<div><i style="background:${COR_GRUPO.rmsp}"></i>Grande SP <i style="background:${COR_GRUPO.entorno}"></i>Entorno <i style="background:${COR_GRUPO.outros}"></i>Só LinkedIn</div>
       <div><i style="background:#fff;border:3px dashed #b83a2e;width:8px;height:8px"></i>Shopping · <i style="background:#7a3fb5"></i>Candidata</div>
+      ${CONC.length && CONC_CATS.some(([c]) => S.cfg.conc[c]) ? '<div>Concorrentes: ' + CONC_CATS.filter(([c]) => S.cfg.conc[c]).map(([, r, c]) => `<i style="background:${c}"></i>${r}`).join(' ') + '</div>' : ''}
       <div><span style="color:${COR_R[3]}">━</span> 3 km · <span style="color:${COR_R[5]}">╍</span> 5 km · cinza = já coberto · verde = área nova</div>`;
     if (k !== 'off') {
       const lim = limitesMetrica(k); const r = (x) => fmt(x, METR[k].semArea ? 0 : 0);
@@ -388,6 +418,7 @@
     const tile = (v, rot) => `<div class="tile"><b>${v}</b><span>${rot}</span></div>`;
     return `<div class="caixa"><h3>Números em volta do ponto · raio de ${R} km</h3>
       <div class="kpi">${tile(fmt(agg.pop), 'moradores (Censo 2022)')}${tile(agg.renda_media_resp == null ? '—' : 'R$ ' + fmt(agg.renda_media_resp), 'renda média do responsável')}${tile(reais(agg.massa_renda), 'potencial de consumo por mês (renda somada dos responsáveis)')}${tile(fmt(agg.empregos), 'empregos formais (RAIS)')}${tile(fmt(agg.densidade_km2), 'moradores por km²')}${tile(fmt(agg.restaurantes), 'restaurantes e lanchonetes (CNPJ)')}${tile(fmt(agg.academias), 'academias ativas (CNPJ)')}</div></div>
+      ${blocoConc(c, R)}
       <div class="caixa"><h3>Sobreposição com as lojas atuais · ${R} km</h3>
       <div class="barra2" role="img" aria-label="${fmt(r.pct_nova)}% área nova, ${fmt(r.pct_coberta)}% já coberta"><i class="nova" style="width:${Math.max(0, Math.min(100, r.pct_nova))}%"></i><i class="cob" style="width:${Math.max(0, Math.min(100, r.pct_coberta))}%"></i></div>
       <div class="dupla"><div><b class="grande verde">${fmt(r.pct_nova)}%</b><br><span class="mut">área nova (${fmt(r.area_nova_km2, 1)} km²)</span></div><div><b class="grande">${fmt(r.pct_coberta)}%</b><br><span class="mut">já coberta (${fmt(r.area_coberta_km2, 1)} km²)</span></div></div>
@@ -510,7 +541,28 @@
   }
 
   // ---------- lojas ----------
+  function verTodas() {
+    const pts = F.lojas.map((l) => [l.lat, l.lng]); if (!pts.length) return;
+    map.fitBounds(L.latLngBounds(pts).pad(0.12), { maxZoom: 9 });
+    const on = CONC_CATS.some(([k]) => S.cfg.conc[k]);
+    toast(on ? 'Visão ampla: lojas e concorrentes marcados.' : 'Visão ampla das lojas. Marque categorias de concorrentes na aba Lojas para vê-los.');
+  }
+  const COMP_COLS = [['nome', 'Loja'], ['pop', 'Moradores'], ['renda', 'Renda média (R$)'], ['consumo', 'Consumo por mês (R$)'], ['emp', 'Empregos'], ['cpoke', 'Poke por perto']];
+  function renderCompLojas() {
+    const R = S.compR || 3; $('#compRaio').value = String(R);
+    const linhas = F.lojas.map((l) => {
+      const a = dem.agregar(l.lat, l.lng, R); const cn = concPerto(l.lat, l.lng, R); const ok = a.cobertura >= 0.5;
+      return { id: l.id, nome: l.nome, cidade: l.cidade, pop: ok ? a.pop : null, renda: ok ? a.renda_media_resp : null, consumo: ok ? a.massa_renda : null, emp: ok ? a.empregos : null, rest: ok ? a.restaurantes : null, cpoke: cn.poke, ctot: cn.total };
+    });
+    const k = S.compOrd; const dir = S.compDesc ? -1 : 1;
+    linhas.sort((x, y) => { const a = x[k], b = y[k]; if (k === 'nome') return dir * String(a).localeCompare(String(b), 'pt-BR'); if (a == null && b == null) return 0; if (a == null) return 1; if (b == null) return -1; return dir * (a - b); });
+    const sel = typeof S.sel === 'string' && S.sel.startsWith('loja:') ? S.sel.slice(5) : null;
+    const th = COMP_COLS.map(([c, r]) => `<th data-ord="${c}" class="ord${S.compOrd === c ? ' on' : ''}" tabindex="0" title="Ordenar">${r}${S.compOrd === c ? (S.compDesc ? ' ▼' : ' ▲') : ''}</th>`).join('');
+    const tr = linhas.map((x) => `<tr data-id="${esc(x.id)}" class="${x.id === sel ? 'sel' : ''}"><td>${esc(x.nome)}</td><td>${mil(x.pop)}</td><td>${x.renda == null ? '—' : fmt(x.renda)}</td><td>${reais(x.consumo).replace('R$ ', '')}</td><td>${mil(x.emp)}</td><td title="${fmt(x.ctot)} concorrentes parecidos no total">${fmt(x.cpoke)}</td></tr>`).join('');
+    $('#compLojas').innerHTML = `<div class="rolagem alta"><table class="cmp comp"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+  }
   function renderListaLojas() {
+    renderCompLojas();
     const ef = lojasEf();
     const linhas = ef.map((l) => {
       const ign = S.ignorar.includes(l.id); const sem = l.lat == null;
@@ -541,6 +593,8 @@
     <p>Cobertura dos dados de demanda: o estado de São Paulo inteiro (645 municípios). Fora dele o app avisa e não calcula nota de demanda.</p>
     <h3>Lojas</h3>
     <p>Base de ${D.lojas.n} registros: o levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificado no CNEFE do IBGE, conferido uma a uma no Google Maps no mesmo dia (consulta manual). Resultado: ${D.lojas.lojas.filter((l) => l.status_operacional === 'aberta_conferida').length} com ficha aberta, Valinhos fechada, e 2 duplicatas prováveis sem ficha (Campinas Cambuí – Galizia e Vinhedo incompleto). A conferência achou 4 lojas que faltavam no cadastro (Araraquara, Paulínia, Franca e Catanduva) e pôs no mapa Atibaia, Bauru e Bragança Paulista, que existiam sem ponto. Ficha do Google aberta não prova faturamento nem que a loja seguirá aberta: confirme com a operação. Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
+    <h3>Concorrentes</h3>
+    <p>Mapa e contagens usam CNPJs ativos da Receita Federal (base de 11/10/2026) de restaurante, lanchonete ou açaí cujo <b>nome fantasia</b> indica poke, saudável/fit, açaí ou japonês, no estado de SP e a até 6 km de alguma loja. É uma aproximação: não aparece concorrente sem essas palavras no nome, nem quem ainda não tem CNPJ ativo, e endereço aproximado pode deslocar o ponto. Não entra na nota; é contexto.</p>
     <h3>O que a nota não é</h3>
     <p><b>A cidade como um todo:</b> o detalhe de cada local compara o raio com a cidade inteira (Censo 2022, RAIS 2025 e CNPJ). O “índice da cidade” é a média simples de quatro posições entre as cidades do app (população, renda, empregos e restaurantes por 10 mil moradores); serve para comparar cidades e não entra na nota do ponto.</p>
     <p><b>Bairro de um ponto:</b> o app descobre o bairro pelos endereços mais próximos: o bairro escrito pelas empresas ativas no CNPJ (Receita Federal, base de 11/10/2026) e, ao lado, o distrito/localidade dos CEPs (IBGE, CNEFE/Censo 2022). É uma referência aproximada, em quadras de uns 280 m. Nomes populares de empreendimento ou de região podem não ser bairro oficial.</p>
@@ -711,10 +765,10 @@
   }
 
   // ---------- coordenação ----------
-  function atualizarTudo() { filtrar(); renderTopo(); renderLojasMapa(); renderTabela(); renderCandMapa(); renderSelMapa(); if (S.aba === 'det') renderDetalhe(); if (S.aba === 'cen') renderCenario(); if (S.aba === 'lojas') renderListaLojas(); if (S.aba === 'cid') renderCidades(); }
+  function atualizarTudo() { filtrar(); renderTopo(); renderLojasMapa(); renderConc(); renderTabela(); renderCandMapa(); renderSelMapa(); if (S.aba === 'det') renderDetalhe(); if (S.aba === 'cen') renderCenario(); if (S.aba === 'lojas') renderListaLojas(); if (S.aba === 'cid') renderCidades(); }
   function aplicarCfgNaTela() {
     $$('input[name=raio]').forEach((i) => (i.checked = i.value === S.cfg.raio)); $('#chkShopping').checked = S.cfg.shopping; $('#chkDup').checked = S.cfg.dup; $('#chkRotulos').checked = S.cfg.rotLoja; $('#chkRotCand').checked = S.cfg.rotCand;
-    $$('.fGrupo').forEach((i) => (i.checked = !!S.cfg.grupos[i.value])); $('#chkCirculos').checked = S.cfg.circulos; $('#chkUniao').checked = S.cfg.uniao; $('#selDemanda').value = S.cfg.demanda; $('#selOrdem').value = S.cfg.ordem; renderPesos();
+    $$('.fGrupo').forEach((i) => (i.checked = !!S.cfg.grupos[i.value])); $$('.fConc').forEach((i) => (i.checked = !!S.cfg.conc[i.value])); $('#chkCirculos').checked = S.cfg.circulos; $('#chkUniao').checked = S.cfg.uniao; $('#selDemanda').value = S.cfg.demanda; $('#selOrdem').value = S.cfg.ordem; renderPesos();
   }
   function ligarDivisor() {
     const root = document.documentElement; const dv = $('#divisor'); const KEY = 'mp_painel_w';
@@ -734,6 +788,13 @@
     $('#chkRotulos').onchange = (e) => { S.cfg.rotLoja = e.target.checked; salvar(); renderLojasMapa(); };
     $('#chkRotCand').onchange = (e) => { S.cfg.rotCand = e.target.checked; salvar(); renderCandMapa(); };
     $$('.fGrupo').forEach((i) => (i.onchange = () => { S.cfg.grupos[i.value] = i.checked; salvar(); atualizarTudo(); }));
+    $$('.fConc').forEach((i) => (i.onchange = () => { S.cfg.conc[i.value] = i.checked; salvar(); renderConc(); atualizarLegenda(); }));
+    $('#btnVerTodas').onclick = verTodas;
+    $('#compRaio').onchange = (e) => { S.compR = Number(e.target.value); renderCompLojas(); };
+    $('#compLojas').addEventListener('click', (e) => {
+      const th = e.target.closest('[data-ord]'); if (th) { const k = th.dataset.ord; if (S.compOrd === k) S.compDesc = !S.compDesc; else { S.compOrd = k; S.compDesc = k !== 'nome'; } renderCompLojas(); return; }
+      const tr = e.target.closest('tr[data-id]'); if (tr) { const l = lojasEf().find((x) => x.id === tr.dataset.id); if (l && l.lat != null) { map.setView([l.lat, l.lng], 14); verLoja(l, false); } }
+    });
     $('#chkCirculos').onchange = (e) => { S.cfg.circulos = e.target.checked; salvar(); renderLojasMapa(); };
     $('#chkUniao').onchange = (e) => { S.cfg.uniao = e.target.checked; salvar(); renderLojasMapa(); };
     $('#selDemanda').onchange = (e) => { S.cfg.demanda = e.target.value; limites = null; salvar(); renderDemanda(); };
@@ -770,12 +831,12 @@
   // ---------- início ----------
   const salvo = lerArmazenado();
   if (salvo && salvo.v === 1) {
-    if (salvo.cfg) { S.cfg = Object.assign(PADRAO(), salvo.cfg, { pesos: Object.assign({}, DM.PESOS_PADRAO, salvo.cfg.pesos || {}), grupos: Object.assign({ rmsp: true, entorno: true, outros: true }, salvo.cfg.grupos || {}) }); }
+    if (salvo.cfg) { S.cfg = Object.assign(PADRAO(), salvo.cfg, { pesos: Object.assign({}, DM.PESOS_PADRAO, salvo.cfg.pesos || {}), grupos: Object.assign({ rmsp: true, entorno: true, outros: true }, salvo.cfg.grupos || {}), conc: Object.assign({ poke: true, saudavel: false, acai: false, japones: false }, salvo.cfg.conc || {}) }); }
     S.cand = Array.isArray(salvo.cand) ? salvo.cand.filter((c) => c && brasilOk(+c.lat, +c.lng)) : [];
     if (!salvo.semV2) { S.cand = S.cand.filter((c) => !(c.origem === 'v7' && c.imovel == null && !c.obs && !c.aluguel && c.precisao === 'area_aproximada')); S.cen = S.cen.filter((id) => S.cand.some((c) => c.id === id)); } S.ajLojas = salvo.ajLojas || {}; S.ignorar = salvo.ignorar || []; S.cen = salvo.cen || [];
   } else S.cand = [];
   trocarBase(bases[S.cfg.base] ? S.cfg.base : 'osm');
-  ligar(); aplicarCfgNaTela(); filtrar(); renderTopo(); renderLojasMapa(); renderTabela(); renderCandMapa(); renderDemanda(); atualizarForm(); atualizarLegenda();
+  ligar(); aplicarCfgNaTela(); filtrar(); renderTopo(); renderLojasMapa(); renderConc(); renderTabela(); renderCandMapa(); renderDemanda(); atualizarForm(); atualizarLegenda();
   setTimeout(() => map.invalidateSize(), 200);
   if (window.ResizeObserver) new ResizeObserver(debounce(() => { map.invalidateSize(); if (S.cfg.demanda !== 'off') renderDemanda(); }, 120)).observe($('#mapaBox'));
   window.MPApp = { S, analisar, filtrar, map }; // útil para testes no navegador
