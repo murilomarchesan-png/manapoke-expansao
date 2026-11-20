@@ -12,11 +12,11 @@
     osm_ponto_shopping: 'Ponto do shopping (OpenStreetMap)', google_maps: 'Ponto da ficha do Google Maps', manual: 'Ponto marcado por você', pendente: 'Sem ponto no mapa',
   };
   const ROT_P = { area_aproximada: 'ponto aproximado da área', trecho_aproximado: 'ponto aproximado do trecho da rua', bairro_aproximado: 'centro aproximado do bairro', pino_manual: 'pino posicionado por você', coordenada: 'coordenada informada' };
-  const COR_GRUPO = { rmsp: '#14724f', entorno: '#2a6fb0', outros: '#8a8f98' };
+  const COR_GRUPO = { rmsp: '#14724f', entorno: '#2a6fb0', outros: '#8a8f98', sc: '#d9822b' };
   const COR_R = { 3: '#14724f', 5: '#2a6fb0' };
 
   // ---------- estado e armazenamento ----------
-  const PADRAO = () => ({ raio: 'ambos', shopping: true, dup: true, grupos: { rmsp: true, entorno: true, outros: true }, rotLoja: true, rotCand: true, conc: { poke: true, saudavel: false, acai: false, japones: false }, circulos: true, uniao: true, demanda: 'off', base: 'osm', pesos: Object.assign({}, DM.PESOS_PADRAO), ordem: 'nota' });
+  const PADRAO = () => ({ raio: 'ambos', shopping: true, dup: true, grupos: { rmsp: true, entorno: true, outros: true, sc: true }, rotLoja: true, rotCand: true, conc: { poke: true, saudavel: false, acai: false, japones: false }, circulos: true, uniao: true, demanda: 'off', base: 'osm', pesos: Object.assign({}, DM.PESOS_PADRAO), ordem: 'nota' });
   const S = { cfg: PADRAO(), cand: [], ajLojas: {}, ignorar: [], cen: [], sel: null, detR: 3, aba: 'cand', nova: null, modo: null, compR: 3, compOrd: 'consumo', compDesc: true };
   let F = null; // lojas filtradas
   const cache = new Map();
@@ -201,8 +201,10 @@
     if (a.cobertura < 0.5) return '';
     return `<p><b>Raio de 3 km:</b> ${fmt(a.pop)} moradores · renda média R$ ${a.renda_media_resp == null ? '—' : fmt(a.renda_media_resp)}<br>Potencial de consumo ${reais(a.massa_renda)} por mês · ${fmt(a.empregos)} empregos</p>${CONC.length ? `<p class="peq">Concorrentes a 3 km (nome parecido): ${concTexto(concPerto(l.lat, l.lng, 3))}</p>` : ''}`;
   }
+  const dataBR = (l) => (l && l.verificada_em ? l.verificada_em.split('-').reverse().join('/') : '19/11/2026');
   const STATUS_TXT = { aberta_conferida: ['aberta no Google Maps em 19/11/2026', 'tag az'], fechada: ['fechada (Google Maps, 19/11/2026)', 'tag verm'], nao_encontrada: ['sem ficha no Google Maps', 'tag lar'], nao_verificado: ['não verificada como aberta', 'tag lar'] };
-  const tagStatus = (l) => { const t = STATUS_TXT[l.status_operacional] || STATUS_TXT.nao_verificado; return `<span class="${t[1]}">${t[0]}</span>`; };
+  const txtStatus = (l) => (STATUS_TXT[l.status_operacional] || STATUS_TXT.nao_verificado)[0].replace('19/11/2026', dataBR(l));
+  const tagStatus = (l) => { const t = STATUS_TXT[l.status_operacional] || STATUS_TXT.nao_verificado; return `<span class="${t[1]}">${txtStatus(l)}</span>`; };
   function popupLoja(l) {
     const q = ROT_Q[l.geo_qualidade] || l.geo_qualidade;
     const ign = S.ignorar.includes(l.id);
@@ -313,7 +315,7 @@
   }
   function atualizarLegenda(msg) {
     const k = S.cfg.demanda;
-    let h = `<div><i style="background:${COR_GRUPO.rmsp}"></i>Grande SP <i style="background:${COR_GRUPO.entorno}"></i>Entorno <i style="background:${COR_GRUPO.outros}"></i>Só LinkedIn</div>
+    let h = `<div><i style="background:${COR_GRUPO.rmsp}"></i>Grande SP <i style="background:${COR_GRUPO.entorno}"></i>Entorno <i style="background:${COR_GRUPO.outros}"></i>Só LinkedIn <i style="background:${COR_GRUPO.sc}"></i>Santa Catarina</div>
       <div><i style="background:#fff;border:3px dashed #b83a2e;width:8px;height:8px"></i>Shopping · <i style="background:#7a3fb5"></i>Candidata</div>
       ${CONC.length && CONC_CATS.some(([c]) => S.cfg.conc[c]) ? '<div>Concorrentes: ' + CONC_CATS.filter(([c]) => S.cfg.conc[c]).map(([, r, c]) => `<i style="background:${c}"></i>${r}`).join(' ') + '</div>' : ''}
       <div><span style="color:${COR_R[3]}">━</span> 3 km · <span style="color:${COR_R[5]}">╍</span> 5 km · cinza = já coberto · verde = área nova</div>`;
@@ -377,7 +379,7 @@
     else if (a.agg.cobertura < 0.9) v.push(['', `Só ${fmt(a.agg.cobertura * 100)}% do círculo está na área com dados de demanda; os números de moradores, renda e emprego estão subestimados.`]);
     if (a.r.pct_nova < 25 && F.lojas.length && !c._loja) v.push(['verm', `Só ${fmt(a.r.pct_nova)}% da área do círculo é nova: ${fmt(a.r.pct_coberta)}% já está dentro do raio de lojas existentes. A nota considera a demanda do entorno, mas abrir aqui tende a dividir clientes com essas lojas (canibalização).`]);
     if (c.imovel == null && !c._loja) v.push(['', `Viabilidade do imóvel não informada: a nota é parcial (o peso de ${S.cfg.pesos.imovel} é redistribuído).`]);
-    if (a.r.lojas_dentro.length || a.r.lojas_sobrepostas.length) v.push(['', 'A situação das lojas vizinhas foi conferida no Google Maps em 19/11/2026; confirme com a operação antes de decidir, porque a ficha do Google pode estar desatualizada.']);
+    if (a.r.lojas_dentro.length || a.r.lojas_sobrepostas.length) v.push(['', 'A situação das lojas vizinhas foi conferida no Google Maps em 19/11/2026 (SC em 20/11/2026); confirme com a operação antes de decidir, porque a ficha do Google pode estar desatualizada.']);
     return v;
   }
   function blocoCidade(c, R) {
@@ -437,7 +439,7 @@
     const bd = bairroDe(c.lat, c.lng);
     const resumo = rs.map((R) => { const a = analisar(c, R); return `<button class="resumo${R === S.detR ? ' ativo' : ''}" data-detr="${R}" aria-pressed="${R === S.detR}"><span class="mut">Raio de ${R} km</span><span class="nota grande ${clsNota(a.n.nota)}">${a.n.nota == null ? '—' : Math.round(a.n.nota)}${a.n.parcial && a.n.nota != null ? '*' : ''}</span><span>${veredito(a.n.nota)}${a.n.parcial ? ' · parcial' : ''}</span><span class="mut peq">${fmt(a.r.pct_nova)}% área nova · ${fmt(a.agg.pop)} moradores</span></button>`; }).join('');
     el.innerHTML = `<div class="caixa"><div class="linha"><button class="btn sec" id="btnVoltar">← Ranking</button><button class="btn sec" id="btnCentrar">Centralizar no mapa</button></div>
-      <h2 class="titulo">${eLoja ? 'Loja · ' : S.cand.indexOf(c) + 1 + '. '}${esc(c.nome)}</h2>${eLoja ? `<p class="mut peq">Loja do cadastro de 19/11/2026 (${(STATUS_TXT[c._loja.status_operacional] || STATUS_TXT.nao_verificado)[0]}). Os números abaixo são da região em volta dela; a sobreposição desconta a própria loja e conta só as outras.</p>` : ''}
+      <h2 class="titulo">${eLoja ? 'Loja · ' : S.cand.indexOf(c) + 1 + '. '}${esc(c.nome)}</h2>${eLoja ? `<p class="mut peq">Loja da base de lojas (${txtStatus(c._loja)}). Os números abaixo são da região em volta dela; a sobreposição desconta a própria loja e conta só as outras.</p>` : ''}
       <p class="bairro-linha"><b>Bairro:</b> ${esc(bairroLinha(bd))}${bd && bd.local && bd.local !== bd.bairro ? `<br><span class="mut">Distrito/localidade pelos CEPs: ${esc(bd.local)}</span>` : ''}</p>
       <p class="mut peq">${esc(c.referencia || '')} · ${fmt(c.lat, 5)}, ${fmt(c.lng, 5)} · ${esc(ROT_P[c.precisao] || '')}</p></div>
       <div class="resumos${rs.length > 1 ? ' dois' : ''}">${resumo}</div>
@@ -577,7 +579,7 @@
     const ef = lojasEf();
     const linhas = ef.map((l) => {
       const ign = S.ignorar.includes(l.id); const sem = l.lat == null;
-      const tags = `${l.shopping ? '<span class="tag verm">shopping</span>' : ''}${l.duplicata_de ? '<span class="tag">duplicata</span>' : ''}${l.status_operacional === 'fechada' ? '<span class="tag verm">fechada</span>' : ''}${l.status_operacional === 'aberta_conferida' ? '<span class="tag az">aberta</span>' : ''}${l.grupo === 'outros' ? '<span class="tag">só LinkedIn</span>' : ''}${l.grupo === 'entorno' ? '<span class="tag az">entorno</span>' : ''}`;
+      const tags = `${l.shopping ? '<span class="tag verm">shopping</span>' : ''}${l.duplicata_de ? '<span class="tag">duplicata</span>' : ''}${l.status_operacional === 'fechada' ? '<span class="tag verm">fechada</span>' : ''}${l.status_operacional === 'aberta_conferida' ? '<span class="tag az">aberta</span>' : ''}${l.grupo === 'outros' ? '<span class="tag">só LinkedIn</span>' : ''}${l.grupo === 'entorno' ? '<span class="tag az">entorno</span>' : ''}${l.grupo === 'sc' ? '<span class="tag az">Santa Catarina</span>' : ''}`;
       const ponto = sem ? `<button class="btn sec lojaMarcar" data-id="${esc(l.id)}">Marcar no mapa</button>` : esc(ROT_Q[l.geo_qualidade] || '');
       return `<tr><td class="lj-c"><input type="checkbox" class="lojaChk" data-id="${esc(l.id)}" ${ign ? '' : 'checked'} aria-label="Considerar ${esc(l.nome)}"></td>
         <td><a href="#" class="lojaIr" data-id="${esc(l.id)}">${esc(l.nome)}</a>
@@ -603,7 +605,7 @@
     <p>Validação contra o cálculo exato por interseção de setores, em 20 pontos e dois raios: erro mediano de 0,3% em moradores, 0,9% em empregos e 0,2% em renda (máximo de 11% em empregos de um ponto). Detalhes em <code>data/VALIDACAO_DEMANDA.md</code>.</p>
     <p>Cobertura dos dados de demanda: os estados de São Paulo (645 municípios) e Santa Catarina (295), inteiros. Fora deles o app avisa e não calcula nota de demanda.</p>
     <h3>Lojas</h3>
-    <p>Base de ${D.lojas.n} registros: o levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificado no CNEFE do IBGE, conferido uma a uma no Google Maps no mesmo dia (consulta manual). Resultado: ${D.lojas.lojas.filter((l) => l.status_operacional === 'aberta_conferida').length} com ficha aberta, Valinhos fechada, e 2 duplicatas prováveis sem ficha (Campinas Cambuí – Galizia e Vinhedo incompleto). A conferência achou 4 lojas que faltavam no cadastro (Araraquara, Paulínia, Franca e Catanduva) e pôs no mapa Atibaia, Bauru e Bragança Paulista, que existiam sem ponto. Ficha do Google aberta não prova faturamento nem que a loja seguirá aberta: confirme com a operação. Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
+    <p>Base de ${D.lojas.n} registros: o levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificado no CNEFE do IBGE, conferido uma a uma no Google Maps no mesmo dia (consulta manual). Resultado: ${D.lojas.lojas.filter((l) => l.status_operacional === 'aberta_conferida').length} com ficha aberta, Valinhos fechada, e 2 duplicatas prováveis sem ficha (Campinas Cambuí – Galizia e Vinhedo incompleto). A conferência achou 4 lojas que faltavam no cadastro (Araraquara, Paulínia, Franca e Catanduva) e pôs no mapa Atibaia, Bauru e Bragança Paulista, que existiam sem ponto. Em 20/11/2026 a mesma consulta no Google Maps achou 2 lojas em Santa Catarina (Florianópolis e Joinville), incluídas em um grupo próprio; as demais cidades grandes de SC consultadas (Blumenau, Balneário Camboriú, Itajaí, Chapecó, Criciúma, São José, Jaraguá do Sul e Lages) não têm Mana Poke. Ficha do Google aberta não prova faturamento nem que a loja seguirá aberta: confirme com a operação. Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
     <h3>Concorrentes</h3>
     <p>Mapa e contagens usam CNPJs ativos da Receita Federal (base de 11/10/2026) de restaurante, lanchonete ou açaí cujo <b>nome fantasia</b> indica poke, saudável/fit, açaí ou japonês, a até 6 km de alguma loja (hoje todas em SP; Santa Catarina entra se houver loja lá). É uma aproximação: não aparece concorrente sem essas palavras no nome, nem quem ainda não tem CNPJ ativo, e endereço aproximado pode deslocar o ponto. Não entra na nota; é contexto.</p>
     <h3>O que a nota não é</h3>
@@ -771,7 +773,7 @@
       <h2>Ranking das candidatas</h2><table><thead><tr><th>Candidata</th>${rs.map((R) => `<th>Nota ${R} km</th><th>% nova</th><th>Moradores</th><th>Renda (R$)</th><th>Empregos</th>`).join('')}</tr></thead><tbody>${linhas}</tbody></table>
       <p>* nota parcial: falta algum componente (por exemplo, a viabilidade do imóvel). Pontos marcados como aproximados devem ser confirmados no local.</p>
       ${c ? `<h2>Detalhe: ${esc(c.nome)}</h2>${rs.map((R) => { const a = analisar(c, R); return `<section><h3>${R} km — nota ${fmt(a.n.nota)}</h3><ul>${a.n.componentes.map((k) => `<li>${esc(k.rotulo)} (peso ${k.peso}): ${k.disponivel ? fmt(k.valor) + ' de 100' : 'indisponível'} — fonte: ${esc(k.fonte)}</li>`).join('')}</ul><p>Área nova ${fmt(a.r.area_nova_km2, 1)} km² (${fmt(a.r.pct_nova)}%); já coberta ${fmt(a.r.area_coberta_km2, 1)} km². Lojas dentro do raio: ${a.r.lojas_dentro.map((x) => esc(x.nome) + ' (' + fmt(x.d, 1) + ' km)').join('; ') || 'nenhuma'}.</p></section>`; }).join('')}` : ''}
-      <h2>Fontes e limites</h2><p>Moradores, domicílios e renda: IBGE, Censo 2022. Empregos: RAIS (MTE). Restaurantes e academias: CNPJ (Receita Federal, ativos). Lojas: levantamento de 19/11/2026, geocodificado no CNEFE do IBGE; nenhuma confirmada como aberta. A nota mede potencial de demanda e cobertura, não prevê faturamento. Distâncias em linha reta.</p>`;
+      <h2>Fontes e limites</h2><p>Moradores, domicílios e renda: IBGE, Censo 2022. Empregos: RAIS (MTE). Restaurantes e academias: CNPJ (Receita Federal, ativos). Lojas: levantamento de 19/11/2026 conferido no Google Maps (SC em 20/11/2026), geocodificado no CNEFE do IBGE; ficha aberta não prova que a loja segue operando. A nota mede potencial de demanda e cobertura, não prevê faturamento. Distâncias em linha reta.</p>`;
     window.print();
   }
 
@@ -842,7 +844,7 @@
   // ---------- início ----------
   const salvo = lerArmazenado();
   if (salvo && salvo.v === 1) {
-    if (salvo.cfg) { S.cfg = Object.assign(PADRAO(), salvo.cfg, { pesos: Object.assign({}, DM.PESOS_PADRAO, salvo.cfg.pesos || {}), grupos: Object.assign({ rmsp: true, entorno: true, outros: true }, salvo.cfg.grupos || {}), conc: Object.assign({ poke: true, saudavel: false, acai: false, japones: false }, salvo.cfg.conc || {}) }); }
+    if (salvo.cfg) { S.cfg = Object.assign(PADRAO(), salvo.cfg, { pesos: Object.assign({}, DM.PESOS_PADRAO, salvo.cfg.pesos || {}), grupos: Object.assign({ rmsp: true, entorno: true, outros: true, sc: true }, salvo.cfg.grupos || {}), conc: Object.assign({ poke: true, saudavel: false, acai: false, japones: false }, salvo.cfg.conc || {}) }); }
     S.cand = Array.isArray(salvo.cand) ? salvo.cand.filter((c) => c && brasilOk(+c.lat, +c.lng)) : [];
     if (!salvo.semV2) { S.cand = S.cand.filter((c) => !(c.origem === 'v7' && c.imovel == null && !c.obs && !c.aluguel && c.precisao === 'area_aproximada')); S.cen = S.cen.filter((id) => S.cand.some((c) => c.id === id)); } S.ajLojas = salvo.ajLojas || {}; S.ignorar = salvo.ignorar || []; S.cen = salvo.cen || [];
   } else S.cand = [];

@@ -4,16 +4,16 @@ Gerado a partir de `lojas_base.psv` (registros do levantamento de 19/11/2026 mai
 
 ## Resumo
 
-- Registros: **62**  (Grande SP: 24, entorno: 19, só LinkedIn: 19)
-- Status operacional (conferência manual no Google Maps em 19/11/2026): **59 abertas**, 1 fechada(s), 2 não encontrada(s) (duplicatas prováveis).
-- Com ponto no mapa: **61**; pendentes: **1**
+- Registros: **64**  (Grande SP: 24, entorno: 19, só LinkedIn: 19, Santa Catarina: 2)
+- Status operacional (conferência manual no Google Maps em 19/11/2026): **61 abertas**, 1 fechada(s), 2 não encontrada(s) (duplicatas prováveis).
+- Com ponto no mapa: **63**; pendentes: **1**
 
 | Qualidade do ponto | Lojas |
 |---|---|
 | Endereço (número exato no CNEFE) | 47 |
 | Endereço (número vizinho no CNEFE) | 6 |
 | Ponto do shopping (OpenStreetMap) | 1 |
-| Ponto da ficha do Google Maps | 7 |
+| Ponto da ficha do Google Maps | 9 |
 | Pendente | 1 |
 
 ## Pendentes (marcar o ponto no mapa)

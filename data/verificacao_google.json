@@ -1,6 +1,6 @@
 {
- "versao": "2026-11-19",
- "fonte": "Google Maps (consulta manual em 19/11/2026)",
+ "versao": "2026-11-20",
+ "fonte": "Google Maps (consulta manual em 19/11/2026; Santa Catarina em 20/11/2026)",
  "lojas": {
   "americana": {
    "status": "aberta_conferida"
@@ -217,6 +217,20 @@
    "lat": -21.1349625,
    "lng": -48.974211,
    "obs": "Loja que não estava no cadastro de 19/11; achada no Google Maps."
+  },
+  "florianopolis": {
+   "status": "aberta_conferida",
+   "lat": -27.5860619,
+   "lng": -48.5448357,
+   "verificada_em": "2026-11-20",
+   "obs": "Loja de Santa Catarina; ficha do Google Maps com 613 avaliações (nota 4,7)."
+  },
+  "joinville": {
+   "status": "aberta_conferida",
+   "lat": -26.3052921,
+   "lng": -48.8496162,
+   "verificada_em": "2026-11-20",
+   "obs": "Loja de Santa Catarina; ficha do Google Maps com 226 avaliações (nota 4,6)."
   }
  }
 }

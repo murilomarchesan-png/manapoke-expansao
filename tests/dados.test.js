@@ -10,18 +10,18 @@ const cand = R('data', 'candidatas.json');
 const grid = R('data', 'demanda_grid.json');
 const refs = R('data', 'referencias.json');
 
-test('Base de lojas: 62 registros, ids únicos, status conferido no Google Maps (19/11)', () => {
-  assert.equal(lojas.length, 62);
-  assert.equal(new Set(lojas.map((l) => l.id)).size, 62);
+test('Base de lojas: 64 registros, ids únicos, status conferido no Google Maps (19/11)', () => {
+  assert.equal(lojas.length, 64);
+  assert.equal(new Set(lojas.map((l) => l.id)).size, 64);
   assert.ok(lojas.every((l) => ['aberta_conferida', 'fechada', 'nao_encontrada', 'nao_verificado'].includes(l.status_operacional)));
   assert.deepEqual(lojas.filter((l) => l.status_operacional === 'fechada').map((l) => l.id), ['valinhos']);
-  for (const id of ['atibaia', 'bauru', 'braganca-paulista', 'araraquara', 'paulinia', 'franca', 'catanduva']) { const l = lojas.find((x) => x.id === id); assert.ok(l && l.lat != null && l.status_operacional === 'aberta_conferida', id); }
+  for (const id of ['atibaia', 'bauru', 'braganca-paulista', 'araraquara', 'paulinia', 'franca', 'catanduva', 'florianopolis', 'joinville']) { const l = lojas.find((x) => x.id === id); assert.ok(l && l.lat != null && l.status_operacional === 'aberta_conferida', id); }
 });
 
-test('Lojas: coordenadas só no estado de SP e nenhuma inventada para pendentes', () => {
+test('Lojas: coordenadas só em SP e SC e nenhuma inventada para pendentes', () => {
   const comPonto = lojas.filter((l) => l.lat != null);
-  assert.ok(comPonto.length >= 61);
-  for (const l of comPonto) assert.ok(l.lat > -25.5 && l.lat < -19.5 && l.lng > -53.5 && l.lng < -44, `${l.id} fora de SP`);
+  assert.ok(comPonto.length >= 63);
+  for (const l of comPonto) assert.ok(l.lat > -29.4 && l.lat < -19.5 && l.lng > -53.9 && l.lng < -44, `${l.id} fora de SP e SC`);
   for (const l of lojas.filter((x) => x.lat == null)) assert.equal(l.geo_qualidade, 'pendente', `${l.id} sem ponto deve estar pendente`);
   assert.ok(comPonto.every((l) => ['cnefe_numero_exato', 'cnefe_numero_proximo', 'osm_ponto_shopping', 'google_maps'].includes(l.geo_qualidade)));
 });
@@ -68,14 +68,14 @@ test('Índice de ruas: cada município listado tem arquivo e contagem coerente',
   assert.ok(fs.existsSync(path.join(__dirname, '..', 'data', 'ruas', '3550308.js')));
 });
 
-test('concorrentes (CNPJ): categorias validas, coordenadas no estado de SP, sem duplicata exata', () => {
+test('concorrentes (CNPJ): categorias validas, coordenadas em SP e SC, sem duplicata exata', () => {
   global.window = global.window || {}; global.MP_DATA = (window.MP_DATA = window.MP_DATA || {});
   require('../data/concorrentes.js');
   const C = MP_DATA.concorrentes;
-  assert.ok(C.rows.length > 1500);
+  assert.ok(C.rows.length > 2500);
   const seen = new Set();
   for (const [lat, lng, cat, nome] of C.rows) {
-    assert.ok(lat < -19 && lat > -26 && lng < -44 && lng > -54);
+    assert.ok(lat < -19 && lat > -29.4 && lng < -44 && lng > -53.9);
     assert.ok(C.cats[cat] && nome);
     const k = lat + '|' + lng + '|' + nome; assert.ok(!seen.has(k)); seen.add(k);
     assert.ok(!/mana poke/i.test(nome));

@@ -59,7 +59,7 @@ A grade de demanda tem células de 500 m e cobre os **estados de São Paulo (645
 
 ## Limites que você precisa saber
 
-1. **Lojas conferidas no Google Maps em 19/11/2026 (consulta manual).** A base tem 62 registros: 58 do levantamento (planilhas e LinkedIn) mais 4 que faltavam (Araraquara, Paulínia, Franca, Catanduva). 59 têm ficha aberta no Google, Valinhos está fechada (fora dos cálculos) e 2 duplicatas prováveis não têm ficha. Ficha aberta não prova que a loja segue operando: confirme com a operação. Dá para tirar qualquer loja dos cálculos.
+1. **Lojas conferidas no Google Maps em 19/11/2026 (consulta manual).** A base tem 64 registros: 58 do levantamento (planilhas e LinkedIn), 4 que faltavam (Araraquara, Paulínia, Franca, Catanduva) e 2 de Santa Catarina achadas em 20/11 (Florianópolis e Joinville). 61 têm ficha aberta no Google, Valinhos está fechada (fora dos cálculos) e 2 duplicatas prováveis não têm ficha. Ficha aberta não prova que a loja segue operando: confirme com a operação. Dá para tirar qualquer loja dos cálculos.
 2. **3 lojas não têm ponto no mapa** (Atibaia, Bauru, Bragança Paulista): faltam rua ou número. Enquanto isso o app mostra "cobertura parcial". A de Vinhedo "incompleta" está oculta como duplicata de Vinhedo.
 3. **Pontos aproximados:** as áreas do mapa anterior (arquivo `data/candidatas.json`, não usadas pela tela) são pontos de **área**, não imóveis. O endereço buscado é o ponto médio do **trecho** da rua. Arraste o pino até o imóvel antes de decidir.
 4. **Possíveis duplicatas e divergências** da base (Campinas Cambuí, Santana 435/436 e outras) estão em [`data/RELATORIO_QUALIDADE.md`](data/RELATORIO_QUALIDADE.md).
