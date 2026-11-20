@@ -373,7 +373,7 @@
     const v = [];
     if (c.precisao !== 'pino_manual' && c.precisao !== 'coordenada') v.push(['', `O ponto é ${ROT_P[c.precisao] || 'aproximado'}. Arraste o pino até o imóvel antes de decidir: a sobreposição muda com algumas centenas de metros.`]);
     if (F.naoAvaliadas.length) v.push(['verm', `Cobertura parcial: ${F.lojas.length} de ${F.total} lojas avaliadas. ${F.naoAvaliadas.length} sem ponto no mapa (${F.naoAvaliadas.map((l) => esc(l.nome)).join(', ')}) podem sobrepor esta área e não entraram no cálculo.`]);
-    if (a.agg.cobertura < 0.5) v.push(['verm', 'Este ponto está fora do estado de São Paulo, que é a área com dados de demanda. Sem nota de demanda; só a geometria foi calculada.']);
+    if (a.agg.cobertura < 0.5) v.push(['verm', 'Este ponto está fora de São Paulo e Santa Catarina, que são as áreas com dados de demanda. Sem nota de demanda; só a geometria foi calculada.']);
     else if (a.agg.cobertura < 0.9) v.push(['', `Só ${fmt(a.agg.cobertura * 100)}% do círculo está na área com dados de demanda; os números de moradores, renda e emprego estão subestimados.`]);
     if (a.r.pct_nova < 25 && F.lojas.length && !c._loja) v.push(['verm', `Só ${fmt(a.r.pct_nova)}% da área do círculo é nova: ${fmt(a.r.pct_coberta)}% já está dentro do raio de lojas existentes. A nota considera a demanda do entorno, mas abrir aqui tende a dividir clientes com essas lojas (canibalização).`]);
     if (c.imovel == null && !c._loja) v.push(['', `Viabilidade do imóvel não informada: a nota é parcial (o peso de ${S.cfg.pesos.imovel} é redistribuído).`]);
@@ -382,7 +382,7 @@
   }
   function blocoCidade(c, R) {
     const m = cidadeDe(c.lat, c.lng);
-    if (!m) return '<div class="caixa"><h3>A cidade como um todo</h3><p class="mut">Este ponto está fora do estado de São Paulo, que é a área com totais na base.</p></div>';
+    if (!m) return '<div class="caixa"><h3>A cidade como um todo</h3><p class="mut">Este ponto está fora de São Paulo e Santa Catarina, que são as áreas com totais na base.</p></div>';
     const { agg } = analisar(c, R); const lj = lojasNaCidade(m);
     const lin = (rot, a, b) => `<tr><td>${rot}</td><td>${a}</td><td>${b}</td></tr>`;
     const razao = lj.length ? `${fmt(m.pop / lj.length)} moradores por loja` : '';
@@ -492,7 +492,7 @@
   }
 
   // ---------- cidades ----------
-  S.cid = { ord: 'consumo', desc: true, semLoja: false, q: '', abertas: new Set() };
+  S.cid = { ord: 'consumo', desc: true, semLoja: false, uf: '', q: '', abertas: new Set() };
   const CID_ORD = [['consumo', 'Potencial de consumo'], ['pop', 'Moradores'], ['renda', 'Renda média do responsável'], ['empregos', 'Empregos formais'], ['rest10k', 'Restaurantes por 10 mil moradores'], ['indice', 'Índice geral'], ['nome', 'Nome (A a Z)']];
   const bairrosDaCidade = (m) => { const t = D.cidades_bairros; if (!t) return []; const cols = t.colunas; return (t.cidades[m.cd] || []).map((r) => { const o = {}; cols.forEach((c, i) => (o[c] = r[i])); return o; }); };
   // loja Mana Poke mais próxima de um ponto (só entre as avaliadas), em linha reta
@@ -521,19 +521,21 @@
   function renderCidades() {
     const el = $('#cidades'); if (!MUN) { el.innerHTML = '<p class="mut">Sem dados de cidades.</p>'; return; }
     const val = (m, k) => (k === 'nome' ? m.nome : m[k]);
-    let lista = MUN.rows.filter((m) => (!S.cid.semLoja || !lojasNaCidade(m).length) && (!S.cid.q || m.key.includes(norm(S.cid.q))));
+    let lista = MUN.rows.filter((m) => (!S.cid.uf || m.cd.startsWith(S.cid.uf)) && (!S.cid.semLoja || !lojasNaCidade(m).length) && (!S.cid.q || m.key.includes(norm(S.cid.q))));
     lista.sort((a, b) => { const x = val(a, S.cid.ord), y = val(b, S.cid.ord); const r = typeof x === 'string' ? x.localeCompare(y, 'pt-BR') : (x == null ? -1 : x) - (y == null ? -1 : y); return S.cid.desc ? -r : r; });
     const card = (m) => { const aberta = S.cid.abertas.has(m.cd); const nl = lojasNaCidade(m).length;
       return `<details class="cidade" data-cd="${esc(m.cd)}"${aberta ? ' open' : ''}><summary><span class="mais" aria-hidden="true"></span><span class="nm">${esc(m.nome)}${!nl && lojasVizinhas(m).length ? ' <span class="chip viz">loja na região</span>' : ''}${nl ? ` <span class="chip">${nl} loja${nl > 1 ? 's' : ''}</span>` : ''}</span><span class="rs"><b>${reais(m.consumo)}</b> por mês · ${mil(m.pop)} moradores</span><span class="ix" title="Índice geral (0 a 100)">${m.indice == null ? '—' : Math.round(m.indice)}</span></summary><div class="corpo">${aberta ? corpoCidade(m) : ''}</div></details>`; };
-    el.innerHTML = `<div class="caixa"><h3>Cidades do estado de São Paulo</h3>
+    el.innerHTML = `<div class="caixa"><h3>Cidades de São Paulo e Santa Catarina</h3>
       <p class="mut peq">Totais da cidade inteira (Censo 2022, RAIS 2025, CNPJ ativo em 11/10/2026). <b>Potencial de consumo</b> = renda média do responsável × responsáveis com renda declarada, em R$ por mês: mede poder de compra, não é gasto medido nem faturamento. O índice (0 a 100) é a média simples das posições em potencial de consumo, renda, empregos e restaurantes por 10 mil moradores. Abra uma cidade com o <b>+</b>.</p>
       <div class="filtros"><input id="cidBusca" type="search" placeholder="Filtrar cidade" value="${esc(S.cid.q)}" aria-label="Filtrar cidade">
+        <label class="peq">Estado <select id="cidUf"><option value=""${S.cid.uf === '' ? ' selected' : ''}>SP e SC</option><option value="35"${S.cid.uf === '35' ? ' selected' : ''}>São Paulo</option><option value="42"${S.cid.uf === '42' ? ' selected' : ''}>Santa Catarina</option></select></label>
         <label class="peq">Ordenar por <select id="cidOrd">${CID_ORD.map(([k, r]) => `<option value="${k}"${S.cid.ord === k ? ' selected' : ''}>${r}</option>`).join('')}</select></label>
         <button id="cidDir" class="btn" title="Inverter a ordem" aria-label="Inverter a ordem">${S.cid.desc ? '▼ maior primeiro' : '▲ menor primeiro'}</button>
         <label class="peq"><input type="checkbox" id="cidSem" ${S.cid.semLoja ? 'checked' : ''}> só cidades sem loja</label></div>
       <p class="mut peq">${lista.length} de ${MUN.n} cidades</p>
       <div class="lista-cid">${lista.map(card).join('') || '<p class="mut">Nenhuma cidade.</p>'}</div></div>`;
     $('#cidBusca').oninput = debounce((e) => { S.cid.q = e.target.value; const pos = e.target.selectionStart; renderCidades(); const n = $('#cidBusca'); n.focus(); n.setSelectionRange(pos, pos); }, 200);
+    $('#cidUf').onchange = (e) => { S.cid.uf = e.target.value; renderCidades(); };
     $('#cidSem').onchange = (e) => { S.cid.semLoja = e.target.checked; renderCidades(); };
     $('#cidOrd').onchange = (e) => { S.cid.ord = e.target.value; S.cid.desc = S.cid.ord !== 'nome'; renderCidades(); };
     $('#cidDir').onclick = () => { S.cid.desc = !S.cid.desc; renderCidades(); };
@@ -599,11 +601,11 @@
     <h3>Dados de demanda (grade de 500 m)</h3>
     <ul><li>${esc(D.demanda_grid.fontes.moradores_domicilios_renda)}</li><li>${esc(D.demanda_grid.fontes.empregos)}</li><li>${esc(D.demanda_grid.fontes.restaurantes)}</li><li>${esc(D.demanda_grid.fontes.academias)}</li></ul>
     <p>Validação contra o cálculo exato por interseção de setores, em 20 pontos e dois raios: erro mediano de 0,3% em moradores, 0,9% em empregos e 0,2% em renda (máximo de 11% em empregos de um ponto). Detalhes em <code>data/VALIDACAO_DEMANDA.md</code>.</p>
-    <p>Cobertura dos dados de demanda: o estado de São Paulo inteiro (645 municípios). Fora dele o app avisa e não calcula nota de demanda.</p>
+    <p>Cobertura dos dados de demanda: os estados de São Paulo (645 municípios) e Santa Catarina (295), inteiros. Fora deles o app avisa e não calcula nota de demanda.</p>
     <h3>Lojas</h3>
     <p>Base de ${D.lojas.n} registros: o levantamento de 19/11/2026 (planilhas e LinkedIn), geocodificado no CNEFE do IBGE, conferido uma a uma no Google Maps no mesmo dia (consulta manual). Resultado: ${D.lojas.lojas.filter((l) => l.status_operacional === 'aberta_conferida').length} com ficha aberta, Valinhos fechada, e 2 duplicatas prováveis sem ficha (Campinas Cambuí – Galizia e Vinhedo incompleto). A conferência achou 4 lojas que faltavam no cadastro (Araraquara, Paulínia, Franca e Catanduva) e pôs no mapa Atibaia, Bauru e Bragança Paulista, que existiam sem ponto. Ficha do Google aberta não prova faturamento nem que a loja seguirá aberta: confirme com a operação. Endereços com número divergente entre fontes aparecem no arquivo <code>data/RELATORIO_QUALIDADE.md</code>.</p>
     <h3>Concorrentes</h3>
-    <p>Mapa e contagens usam CNPJs ativos da Receita Federal (base de 11/10/2026) de restaurante, lanchonete ou açaí cujo <b>nome fantasia</b> indica poke, saudável/fit, açaí ou japonês, no estado de SP e a até 6 km de alguma loja. É uma aproximação: não aparece concorrente sem essas palavras no nome, nem quem ainda não tem CNPJ ativo, e endereço aproximado pode deslocar o ponto. Não entra na nota; é contexto.</p>
+    <p>Mapa e contagens usam CNPJs ativos da Receita Federal (base de 11/10/2026) de restaurante, lanchonete ou açaí cujo <b>nome fantasia</b> indica poke, saudável/fit, açaí ou japonês, a até 6 km de alguma loja (hoje todas em SP; Santa Catarina entra se houver loja lá). É uma aproximação: não aparece concorrente sem essas palavras no nome, nem quem ainda não tem CNPJ ativo, e endereço aproximado pode deslocar o ponto. Não entra na nota; é contexto.</p>
     <h3>O que a nota não é</h3>
     <p><b>A cidade como um todo:</b> o detalhe de cada local compara o raio com a cidade inteira (Censo 2022, RAIS 2025 e CNPJ). O “índice da cidade” é a média simples de quatro posições entre as cidades do app (população, renda, empregos e restaurantes por 10 mil moradores); serve para comparar cidades e não entra na nota do ponto.</p>
     <p><b>Bairro de um ponto:</b> o app descobre o bairro pelos endereços mais próximos: o bairro escrito pelas empresas ativas no CNPJ (Receita Federal, base de 11/10/2026) e, ao lado, o distrito/localidade dos CEPs (IBGE, CNEFE/Censo 2022). É uma referência aproximada, em quadras de uns 280 m. Nomes populares de empreendimento ou de região podem não ser bairro oficial.</p>

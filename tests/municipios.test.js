@@ -6,8 +6,12 @@ const M = MP_DATA.municipios;
 const col = (n) => M.colunas.indexOf(n);
 const por = (nome) => M.linhas.find((r) => r[col('nome')] === nome);
 test('totais oficiais por município', () => {
-  assert.strictEqual(M.linhas.length, 645);
-  assert.strictEqual(M.linhas.reduce((s, r) => s + r[col('pop')], 0), 44411238); // total oficial do estado (Censo 2022)
+  assert.strictEqual(M.linhas.length, 940);
+  const soma = (pre) => M.linhas.filter((r) => r[0].startsWith(pre)).reduce((s, r) => s + r[col('pop')], 0);
+  assert.strictEqual(soma('35'), 44411238); // total oficial do estado de SP (Censo 2022)
+  assert.strictEqual(soma('42'), 7610361); // total oficial do estado de SC (Censo 2022)
+  assert.strictEqual(new Set(M.linhas.map((r) => r[1])).size, 940, 'nomes de município únicos (SC leva o sufixo)');
+  assert.strictEqual(por('Joinville (SC)')[col('pop')], 616317);
   assert.strictEqual(por('Suzano')[col('pop')], 307429);
   assert.strictEqual(por('São Paulo')[col('pop')], 11451999);
 });

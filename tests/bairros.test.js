@@ -13,7 +13,7 @@ test('bairro de pontos conhecidos de São Paulo', () => {
 });
 test('índice de bairros: sem nome vazio, com acento nos casos comuns, coordenadas no Brasil', () => {
   assert.ok(B.fidx.length > 12000);
-  for (const [mun, b, lat, lng, n] of B.fidx) { assert.ok(mun && b && n > 0); assert.ok(lat < -19 && lat > -26 && lng < -44 && lng > -54); }
+  for (const [mun, b, lat, lng, n] of B.fidx) { assert.ok(mun && b && n > 0); assert.ok(lat < -19 && lat > -30 && lng < -44 && lng > -54); }
   assert.ok(B.fidx.some((x) => x[1] === 'Vila Olímpia'));
   assert.ok(!B.fidx.some((x) => /^Agua /.test(x[1])));
 });

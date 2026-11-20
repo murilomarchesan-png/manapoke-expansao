@@ -45,7 +45,7 @@ test('Fora da área coberta: cobertura 0 e a nota marca componentes indisponíve
   assert.equal(a.cobertura, 0);
   const n = D.nota(a, { renda: [0, 1], pop: [0, 1], emp: [0, 1], acad: [0, 1] }, 80, null);
   assert.equal(n.parcial, true);
-  assert.equal(n.nota, 80); // só a área nova está disponível
+  assert.equal(n.nota, null); // sem dado de demanda não existe nota (a área nova sozinha enganaria)
   assert.ok(n.indisponiveis.length >= 4);
 });
 

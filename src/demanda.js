@@ -154,7 +154,8 @@
     for (const c of comp) if (c.disponivel && c.peso > 0) { soma += c.peso * c.valor; pesoTot += c.peso; }
     const pesoTotal = comp.reduce((s, c) => s + (c.peso > 0 ? c.peso : 0), 0);
     return {
-      nota: pesoTot > 0 ? soma / pesoTot : null,
+      // fora da área com dados de demanda não há nota: só a área nova (geometria) não diz nada sobre o potencial do ponto
+      nota: pesoTot > 0 && cobreOk ? soma / pesoTot : null,
       peso_usado: pesoTot, peso_total: pesoTotal, parcial: pesoTot < pesoTotal,
       indisponiveis: comp.filter((c) => !c.disponivel && c.peso > 0).map((c) => c.rotulo),
       componentes: comp.map((c) => ({ ...c, contribuicao: c.disponivel && pesoTot > 0 ? (c.peso * c.valor) / pesoTot : 0 })),
