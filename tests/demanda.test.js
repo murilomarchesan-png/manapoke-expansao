@@ -103,3 +103,16 @@ test('agregarPoligono sobre dados reais: círculo de 3 km como polígono ≈ agr
   assert.ok(Math.abs(p.pop - a.pop) / a.pop < 0.01, `${p.pop} vs ${a.pop}`);
   assert.ok(Math.abs(p.massa_renda - a.massa_renda) / a.massa_renda < 0.01);
 });
+
+test('agregarPoligono com partes muito distantes: rápido e igual à soma das partes (não varre a caixa entre elas)', () => {
+  const real = require('../data/demanda_grid.json');
+  const G = require('../src/geo.js');
+  const d = D.criar(real);
+  const a = [G.circleRing([-26.9987, -48.6348], 5, 120)], b = [G.circleRing([-22.9056, -47.0608], 5, 120)];
+  const t = Date.now();
+  const juntos = d.agregarPoligono([a, b]);
+  assert.ok(Date.now() - t < 1500, `demorou ${Date.now() - t} ms`);
+  const sa = d.agregarPoligono([a]), sb = d.agregarPoligono([b]);
+  assert.ok(Math.abs(juntos.pop - (sa.pop + sb.pop)) < 1e-6, `${juntos.pop} vs ${sa.pop + sb.pop}`);
+  assert.ok(juntos.pop > 100000);
+});

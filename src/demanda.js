@@ -97,23 +97,28 @@
     function agregarPoligono(mp) {
       const s = { pop: 0, dom: 0, emp: 0, rest: 0, acad: 0, rw_mean: 0, dom_r: 0, massa: 0 };
       if (!mp || !mp.length) return { pop: 0, domicilios: 0, empregos: 0, restaurantes: 0, academias: 0, renda_media_resp: null, massa_renda: 0, cobertura: 0 };
-      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      for (const poly of mp) for (const ring of poly) for (const [x, y] of ring) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-      const i0 = Math.floor((x0 - grid.lng0) / grid.dlng), i1 = Math.floor((x1 - grid.lng0) / grid.dlng);
-      const j0 = Math.floor((y0 - grid.lat0) / grid.dlat), j1 = Math.floor((y1 - grid.lat0) / grid.dlat);
       let dentroN = 0, cobertasN = 0;
-      for (let i = i0; i <= i1; i++) {
-        for (let j = j0; j <= j1; j++) {
-          const r = idx[i * 100000 + j]; let dentro = 0;
-          for (let a = 0; a < SUB; a++) for (let b = 0; b < SUB; b++) {
-            const pl = grid.lat0 + (j + (b + 0.5) / SUB) * grid.dlat, pg = grid.lng0 + (i + (a + 0.5) / SUB) * grid.dlng;
-            if (dentroMulti(mp, pg, pl)) { dentro++; if (dentroCaixa(pl, pg)) cobertasN++; }
+      // Cada polígono do MultiPolygon é varrido na sua própria caixa. Varrer a caixa do conjunto todo explodia quando as
+      // candidatas ficavam longe uma da outra (ex.: litoral de SC e Campinas = milhões de células, ~20 s).
+      for (const poly of mp) {
+        let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        for (const ring of poly) for (const [x, y] of ring) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        const i0 = Math.floor((x0 - grid.lng0) / grid.dlng), i1 = Math.floor((x1 - grid.lng0) / grid.dlng);
+        const j0 = Math.floor((y0 - grid.lat0) / grid.dlat), j1 = Math.floor((y1 - grid.lat0) / grid.dlat);
+        const um = [poly];
+        for (let i = i0; i <= i1; i++) {
+          for (let j = j0; j <= j1; j++) {
+            const r = idx[i * 100000 + j]; let dentro = 0;
+            for (let a = 0; a < SUB; a++) for (let b = 0; b < SUB; b++) {
+              const pl = grid.lat0 + (j + (b + 0.5) / SUB) * grid.dlat, pg = grid.lng0 + (i + (a + 0.5) / SUB) * grid.dlng;
+              if (dentroMulti(um, pg, pl)) { dentro++; if (dentroCaixa(pl, pg)) cobertasN++; }
+            }
+            dentroN += dentro;
+            if (!r || !dentro) continue;
+            const f = dentro / (SUB * SUB);
+            s.pop += r[col.pop] * f; s.dom += r[col.dom] * f; s.emp += r[col.empregos] * f; s.rest += r[col.restaurantes] * f; s.acad += r[col.academias] * f;
+            s.rw_mean += r[col.renda_media_x_dom] * f; s.dom_r += r[col.dom_com_renda] * f; if (col.massa_renda != null) s.massa += r[col.massa_renda] * f;
           }
-          dentroN += dentro;
-          if (!r || !dentro) continue;
-          const f = dentro / (SUB * SUB);
-          s.pop += r[col.pop] * f; s.dom += r[col.dom] * f; s.emp += r[col.empregos] * f; s.rest += r[col.restaurantes] * f; s.acad += r[col.academias] * f;
-          s.rw_mean += r[col.renda_media_x_dom] * f; s.dom_r += r[col.dom_com_renda] * f; if (col.massa_renda != null) s.massa += r[col.massa_renda] * f;
         }
       }
       return { pop: s.pop, domicilios: s.dom, empregos: s.emp, restaurantes: s.rest, academias: s.acad, renda_media_resp: s.dom_r > 0 ? s.rw_mean / s.dom_r : null, massa_renda: col.massa_renda != null ? s.massa : null, cobertura: dentroN ? cobertasN / dentroN : 0 };
